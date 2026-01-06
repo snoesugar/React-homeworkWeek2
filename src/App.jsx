@@ -74,7 +74,7 @@ const API_PATH = "daisy123"
                 <div className="card-body">
                   <p className="card-text">商品描述：{tempProduct.content}</p>
                   <p className="card-text">商品內容：{tempProduct.description}</p>
-                  <div className="d-flex mb-3">
+                  <div className="d-flex justify-content-end mb-3">
                     <p className="card-text text-secondary">
                       <del>{tempProduct.origin_price}</del>
                     </p>
@@ -91,7 +91,7 @@ const API_PATH = "daisy123"
                         <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                           <div className="accordion-body">
                             {tempProduct.imagesUrl?.map((img, index) => (
-                            <img key={index} src={img} className="images" alt="副圖" />
+                            <img key={index} src={img} className="images me-2 mb-2" alt="副圖" />
                             ))}
                           </div>
                         </div>
@@ -140,7 +140,10 @@ function App() {
       setIsAuth(true)
       getProducts()
     } catch {
-      alert('登入失敗，請確認帳密')
+      toast.error('登入失敗，請確認帳密', {
+      position: "top-right",
+      autoClose: 1500
+    });
     }
   }
 
@@ -170,13 +173,12 @@ function App() {
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
-      
     });
     
     checkLogin(); 
     
 
-  } catch (err) {
+  } catch {
     toast.error('登入失敗，請確認帳密', {
       position: "top-right",
       autoClose: 1500
@@ -196,6 +198,77 @@ function App() {
     }
   }
 
+  //登出
+  const checkLogout = async () => {
+    try {
+      await axios.post(`${API_BASE}/logout`)
+      setIsAuth(false)
+      // 顯示 Toast
+      toast.success('登出成功', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+    } catch {
+      toast.error('登出失敗', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
+  }
+
+  //刪除所有品項
+  const deleteAllProduct = async () => {
+    if (!window.confirm('確定要刪除所有品項嗎？')) return;
+
+    try {
+      // 1️⃣ 先取得目前所有產品
+    const res = await axios.get(
+      `${API_BASE}/api/${API_PATH}/admin/products`
+    );
+
+    const products = res.data.products;
+
+    if (products.length === 0) {
+      toast.info('目前沒有產品可刪除', {
+        autoClose: 1500
+      });
+      return;
+    }
+
+    // 2️⃣ 組成刪除請求陣列
+    const deleteRequests = products.map(item =>
+      axios.delete(
+        `${API_BASE}/api/${API_PATH}/admin/product/${item.id}`
+      )
+    );
+
+    // 3️⃣ 同時刪除所有產品（真的刪資料庫）
+    await Promise.all(deleteRequests);
+
+    // 4️⃣ 重新取得產品（畫面同步）
+    getProducts();
+
+      toast.success('刪除所有品項成功', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch {
+      toast.error('刪除所有品項失敗', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
+  }
+
 
 
   return (
@@ -204,8 +277,11 @@ function App() {
         <div className="container">
           <div className="row mt-5">
             <div className="col">
+              <div className="text-end">
+                <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
+                <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
+              </div>
               <h2>產品列表</h2>
-              <button type="button" className="btn btn-primary">登出</button>
               <table className="table">
                 <thead>
                   <tr>
@@ -226,6 +302,7 @@ function App() {
             </div>
           </div>
           <TempProduct tempProduct={tempProduct} closeModal={closeModal} />
+          <ToastContainer />
         </div>
       ) : (
         <div className="container login">
