@@ -1,0 +1,10 @@
+// 先引入函數
+@import "bootstrap/scss/functions";
+
+// 先自訂變數（覆蓋 Bootstrap 變數）
+@import "./variables";
+
+// 再引入 Bootstrap 核心
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/bootstrap";

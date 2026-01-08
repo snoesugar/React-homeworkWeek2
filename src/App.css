@@ -2,6 +2,13 @@ html,
 body {
   height: 100%;
   text-align: center;
+  background-color: #f9f7f3;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)),
+    url(https://media.istockphoto.com/id/1299664409/photo/modern-empty-background-for-restaurant-menu-original-surreal-golden-cutlery-on-the-wooden.jpg?s=1024x1024&w=is&k=20&c=rqoPss-Mo2ufYbxjCBboc2bI3E1QCBagI-fOLNLhPco=);
+  background-size: cover;
+  background-position: center;
+  font-family: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
 }
 
 .login {
@@ -13,10 +20,10 @@ body {
 }
 
 .form-signin {
-  width: 100%;
-  max-width: 330px;
-  padding: 15px;
-  margin: auto;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
 img {
@@ -35,4 +42,9 @@ img {
   width: 200px;
   margin-right: 16px; /* 加點邊距 */
   object-fit: cover;
+}
+
+.product-images {
+  border-left: 6px solid #445e3f; /* 左側粗線，顏色可改 */
+  background-color: #fff;          /* 框內背景 */
 }

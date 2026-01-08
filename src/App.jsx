@@ -4,10 +4,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css'
 
-const API_BASE = "https://ec-course-api.hexschool.io/v2"
+const API_BASE = import.meta.env.VITE_API_BASE
 
 // 請自行替換 API_PATH
-const API_PATH = "daisy123"
+const API_PATH = import.meta.env.VITE_API_PATH
 
  //產品元件
   const ProductList = ({ products, setTempProduct }) => {
@@ -51,7 +51,7 @@ const API_PATH = "daisy123"
       >
         <div className="modal-dialog">
           <div className="modal-content">
-            <div className="modal-header border-0">
+            <div className="modal-header border-0 bg-primary-100">
               <h5 className="modal-title">
                 {tempProduct.title}
                   <span className="badge rounded-pill bg-primary ms-2">
@@ -71,7 +71,7 @@ const API_PATH = "daisy123"
                   className="card-img-top primary-image rounded-0"
                   alt="主圖"
                 />
-                <div className="card-body">
+                <div className="card-body bg-primary-100">
                   <p className="card-text">商品描述：{tempProduct.content}</p>
                   <p className="card-text">商品內容：{tempProduct.description}</p>
                   <div className="d-flex justify-content-end mb-3">
@@ -84,14 +84,14 @@ const API_PATH = "daisy123"
                     <div className="accordion" id="accordionExample">
                       <div className="accordion-item border-0">
                         <h2 className="accordion-header" id="headingOne">
-                          <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                          <button className="accordion-button collapsed product-images" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                             更多圖片
                           </button>
                         </h2>
                         <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                           <div className="accordion-body">
                             {tempProduct.imagesUrl?.map((img, index) => (
-                            <img key={index} src={img} className="images me-2 mb-2" alt="副圖" />
+                            <img key={index} src={img} className="images me-3 mb-3" alt="副圖" />
                             ))}
                           </div>
                         </div>
@@ -125,7 +125,7 @@ function App() {
   };
 
   // 確認登入是否成功 checkLogin
-  const checkLogin = async () => {
+  const authorization = async () => {
     try {
       //從 cookie 裡「把 token 拿出來」
       const token = document.cookie
@@ -140,7 +140,7 @@ function App() {
       setIsAuth(true)
       getProducts()
     } catch {
-      toast.error('登入失敗，請確認帳密', {
+      toast.error('驗證失敗', {
       position: "top-right",
       autoClose: 1500
     });
@@ -175,7 +175,7 @@ function App() {
       draggable: true,
     });
     
-    checkLogin(); 
+    await authorization(); 
     
 
   } catch {
@@ -198,11 +198,33 @@ function App() {
     }
   }
 
+  //確認是否登入
+  const checkLogin = async () => {
+    try {
+      await axios.post(`${API_BASE}/api/user/check`);
+      toast.success('已登入', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch {
+      toast.error('尚未登入', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
+  };
+
   //登出
   const checkLogout = async () => {
     try {
       await axios.post(`${API_BASE}/logout`)
       setIsAuth(false)
+      delete axios.defaults.headers.common['Authorization'];
+      setProducts([]);
       // 顯示 Toast
       toast.success('登出成功', {
         position: "top-right",
@@ -275,13 +297,14 @@ function App() {
     <>
       {isAuth ? (
         <div className="container">
-          <div className="row mt-5">
+          <div className="row mt-5 bg-white form-signin">
             <div className="col">
-              <div className="text-end">
+              <h2>產品列表</h2>
+              <div className="text-end mb-3">
+                <button type="button" className="btn btn-outline-success me-3" onClick={checkLogin}>確認是否登入</button>
                 <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
                 <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
               </div>
-              <h2>產品列表</h2>
               <table className="table">
                 <thead>
                   <tr>
@@ -307,7 +330,7 @@ function App() {
       ) : (
         <div className="container login">
           <div className="row justify-content-center">
-            <h1 className="h3 mb-3 font-weight-normal">請先登入</h1>
+            <h1 className="h3 mb-3 font-weight-normal text-primary">請先登入</h1>
             <div className="col-8">
               <form id="form" className="form-signin" onSubmit={handleSubmit}>
                 <div className="form-floating mb-3">
