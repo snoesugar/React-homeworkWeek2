@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from 'react'
 import { ToastContainer, toast } from 'react-toastify';
+import { Modal } from 'bootstrap';
+import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css'
 
@@ -10,23 +11,34 @@ const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
  //產品元件
-  const ProductList = ({ products, setTempProduct }) => {
+  const ProductList = ({ products, openModal }) => {
     return (
       <>
         {products && products.length > 0 ? (
           products.map((item) => (
-            <tr key={item.id}>
+            <tr key={item.id} className="align-middle">
               <td>{item.title}</td>
               <td>{item.origin_price}</td>
               <td>{item.price}</td>
-              <td>{item.is_enabled ? "啟用" : "未啟用"}</td>
+              <td>{item.is_enabled ? (<span className="badge bg-success">啟用</span>)
+              : <span className="badge bg-danger">未啟用</span>}</td>
               <td>
                 <button
                   className="btn btn-primary"
-                  onClick={() => setTempProduct(item)}
+                  onClick={() => openModal(item)}
                 >
                   查看細節
                 </button>
+              </td>
+              <td>
+                <div className="btn-group">
+                  <button type="button" className="btn btn-outline-primary btn-sm">
+                    編輯
+                  </button>
+                  <button type="button" className="btn btn-outline-danger btn-sm">
+                    刪除
+                  </button>
+                </div>
               </td>
             </tr>
           ))
@@ -39,14 +51,13 @@ const API_PATH = import.meta.env.VITE_API_PATH
     );
   };
 
-  //Modal元件
+  //查看細節的 Modal元件
   const TempProduct = ({ tempProduct, closeModal }) => {
-  if (!tempProduct) return null;
-
+    if (!tempProduct) return null;
     return (
       <div
-        className="modal show"
-        style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+        className="modal fade"
+        id="productModal"
         tabIndex="-1"
       >
         <div className="modal-dialog">
@@ -61,6 +72,7 @@ const API_PATH = import.meta.env.VITE_API_PATH
               <button
                 type="button"
                 className="btn-close"
+                data-bs-dismiss="modal"
                 onClick={closeModal}
                 aria-label="Close"
               ></button>
@@ -81,22 +93,22 @@ const API_PATH = import.meta.env.VITE_API_PATH
                     元 / {tempProduct.price} 元
                   </div>
                 </div>
-                    <div className="accordion" id="accordionExample">
-                      <div className="accordion-item border-0">
-                        <h2 className="accordion-header" id="headingOne">
-                          <button className="accordion-button collapsed product-images" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            更多圖片
-                          </button>
-                        </h2>
-                        <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                          <div className="accordion-body">
-                            {tempProduct.imagesUrl?.map((img, index) => (
-                            <img key={index} src={img} className="images me-3 mb-3" alt="副圖" />
-                            ))}
-                          </div>
-                        </div>
+                <div className="accordion" id="accordionExample">
+                  <div className="accordion-item border-0">
+                    <h2 className="accordion-header" id="headingOne">
+                      <button className="accordion-button collapsed product-images" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        更多圖片
+                      </button>
+                    </h2>
+                    <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                      <div className="accordion-body">
+                        {tempProduct.imagesUrl?.map((img, index) => (
+                        <img key={index} src={img} className="images me-3 mb-3" alt="副圖" />
+                        ))}
                       </div>
                     </div>
+                  </div>
+                </div>
               </div>
           </div>
         </div>
@@ -104,18 +116,68 @@ const API_PATH = import.meta.env.VITE_API_PATH
     );
   };
 
+  //新增的 Modal元件
+  const AddProduct = ({ closeAddModal }) => {
+    return (
+      <div className="modal fade" 
+      id="addModal"
+      tabIndex="-1"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+              <button type="button" className="btn-close" onClick={closeAddModal}></button>
+            </div>
+            <div className="modal-body">
+              ...
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={closeAddModal}>Close</button>
+              <button type="button" className="btn btn-primary">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
 function App() {
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   });
-
   const [isAuth, setIsAuth] = useState(false);
   const [products, setProducts] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const closeModal = () => setTempProduct(null);
+  // 打開查看細節的 Modal
+  const openModal = (item) => {
+    setTempProduct(item); // 不直接呼叫 Modal.show
+  };
 
+  // 打開建立新的產品的 Modal
+  const openAddModal = () => {
+    setIsAddOpen(true);
+  };
+  
+  // 關閉查看細節的 Modal
+  const closeModal = () => {
+    const modalEl = document.getElementById('productModal');
+    const modalInstance = Modal.getInstance(modalEl);
+    modalInstance?.hide();
+    setTempProduct(null);
+  };
+
+  // 關閉建立新的產品的 Modal
+  const closeAddModal = () => {
+    const modalEl = document.getElementById('addModal');
+    Modal.getInstance(modalEl)?.hide();
+    setIsAddOpen(false);
+  };
+
+  // 取input裡面的值
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData({
@@ -198,7 +260,7 @@ function App() {
     }
   }
 
-  //確認是否登入
+  // 確認是否登入
   const checkLogin = async () => {
     try {
       await axios.post(`${API_BASE}/api/user/check`);
@@ -218,7 +280,7 @@ function App() {
     }
   };
 
-  //登出
+  // 登出
   const checkLogout = async () => {
     try {
       await axios.post(`${API_BASE}/logout`)
@@ -243,7 +305,7 @@ function App() {
     }
   }
 
-  //刪除所有品項
+  // 刪除所有品項
   const deleteAllProduct = async () => {
     if (!window.confirm('確定要刪除所有品項嗎？')) return;
 
@@ -291,6 +353,60 @@ function App() {
     }
   }
 
+  // 確認登入，重整還會在後台
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // 從 Cookie 取 token
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('hexToken='))
+          ?.split('=')[1];
+
+        if (!token) return;
+
+        // 設定 axios header
+        axios.defaults.headers.common['Authorization'] = token;
+
+        // 驗證 token 是否有效
+        await axios.post(`${API_BASE}/api/user/check`);
+
+        // 驗證成功
+        setIsAuth(true);
+        getProducts();
+      } catch {
+        // token 過期或失效
+        setIsAuth(false);
+        delete axios.defaults.headers.common['Authorization'];
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // 監聽 tempProduct 可以用useRef
+  useEffect(() => {
+    if (tempProduct) {
+      const modalEl = document.getElementById('productModal');
+      const modal = new Modal(modalEl);
+      modal.show();
+    }
+  }, [tempProduct]); // 只要 tempProduct 改變就觸發
+
+  // 監聽 addModal 可以用useRef
+  useEffect(() => {
+    if (isAddOpen) {
+      const modalEl = document.getElementById('addModal');
+      const modal = new Modal(modalEl);
+      modal.show();
+    }
+  }, [isAddOpen]);
+
+  // 建立新產品
+  // const newProduct = async () => {
+
+  // }
+
 
 
   return (
@@ -299,11 +415,14 @@ function App() {
         <div className="container">
           <div className="row mt-5 bg-white form-signin">
             <div className="col">
-              <h2>產品列表</h2>
               <div className="text-end mb-3">
                 <button type="button" className="btn btn-outline-success me-3" onClick={checkLogin}>確認是否登入</button>
-                <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
                 <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
+              </div>
+              <h2>產品列表</h2>
+              <div className="text-end mb-3">
+                <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
+                <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
               </div>
               <table className="table">
                 <thead>
@@ -313,18 +432,20 @@ function App() {
                     <th>售價</th>
                     <th>是否啟用</th>
                     <th>查看細節</th>
+                    <th>編輯</th>
                   </tr>
                 </thead>
                 <tbody>
                   <ProductList
                     products={products}
-                    setTempProduct={setTempProduct}
+                    openModal={openModal}
                   />
                 </tbody>
               </table>
             </div>
           </div>
           <TempProduct tempProduct={tempProduct} closeModal={closeModal} />
+          <AddProduct closeAddModal={closeAddModal} />
           <ToastContainer />
         </div>
       ) : (
