@@ -25,6 +25,7 @@ const ProductList = ({ products, openModal, deleteProduct, setNewProduct, openEd
             <td>
               <button
                 className="btn btn-primary"
+                disabled={!item.is_enabled}
                 onClick={() => openModal(item)}
               >
                 查看細節
@@ -112,7 +113,6 @@ const TempProduct = ({ tempProduct, modalRef, closeModal }) => {
                     onClick={() => {
                       const el = document.getElementById(collapseId);
                       if (!el) return;
-
                       const instance = Collapse.getOrCreateInstance(el);
                       instance.toggle();
                     }}
@@ -238,6 +238,25 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
                     />
                   </div>
                 </div>
+                <div className="col-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="is_enabled"
+                      checked={newProduct.is_enabled === 1}
+                      onChange={(e) => {
+                        setNewProduct({
+                          ...newProduct,
+                          is_enabled: e.target.checked ? 1 : 0
+                        });
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="is_enabled">
+                      是否啟用
+                    </label>
+                  </div>
+                </div>
               </div>
               <hr />
               <div className="row">
@@ -251,6 +270,15 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
                       value={newProduct.imageUrl}
                       onChange={handleNewProductChange}
                     />
+                    {newProduct.imageUrl && (
+                      <div className="mt-2">
+                        <img
+                          src={newProduct.imageUrl}
+                          alt="主圖預覽"
+                          className="preview-image"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 {(newProduct.imagesUrl || []).map((img, index) => (
@@ -271,6 +299,13 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
                           });
                         }}
                       />
+                      {img && (
+                        <img
+                          src={img}
+                          alt={`副圖預覽 ${index + 1}`}
+                          className="mt-2 preview-image"
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -384,6 +419,25 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
                     />
                   </div>
                 </div>
+                <div className="col-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="is_enabled"
+                      checked={newProduct.is_enabled === 1}
+                      onChange={(e) => {
+                        setNewProduct({
+                          ...newProduct,
+                          is_enabled: e.target.checked ? 1 : 0
+                        });
+                      }}
+                    />
+                    <label className="form-check-label" htmlFor="is_enabled">
+                      是否啟用
+                    </label>
+                  </div>
+                </div>
               </div>
               <hr />
               <div className="row">
@@ -397,6 +451,15 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
                       value={newProduct.imageUrl}
                       onChange={handleNewProductChange}
                     />
+                    {newProduct.imageUrl && (
+                      <div className="mt-2">
+                        <img
+                          src={newProduct.imageUrl}
+                          alt="主圖預覽"
+                          className="preview-image"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 {(newProduct.imagesUrl || []).map((img, index) => (
@@ -417,6 +480,13 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
                           });
                         }}
                       />
+                      {img && (
+                        <img
+                          src={img}
+                          alt={`副圖預覽 ${index + 1}`}
+                          className="mt-2 preview-image"
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -446,7 +516,7 @@ function App() {
     unit: "",
     description: "",
     content: "",
-    is_enabled: "",
+    is_enabled: 1,
     imageUrl: "",
     imagesUrl: ["", "", "", "", ""]
   })
@@ -659,7 +729,7 @@ function App() {
             ...newProduct,
             origin_price: Number(newProduct.origin_price),
             price: Number(newProduct.price),
-            is_enabled: 1
+            is_enabled: newProduct.is_enabled
           }
         }
       );
