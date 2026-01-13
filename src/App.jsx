@@ -109,10 +109,13 @@ const TempProduct = ({ tempProduct, modalRef, closeModal }) => {
                   <button
                     className="accordion-button collapsed product-images"
                     type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target={`#${collapseId}`}
-                    aria-expanded="false"
-                    aria-controls={collapseId}
+                    onClick={() => {
+                      const el = document.getElementById(collapseId);
+                      if (!el) return;
+
+                      const instance = Collapse.getOrCreateInstance(el);
+                      instance.toggle();
+                    }}
                   >
                     更多圖片
                   </button>
@@ -507,7 +510,7 @@ function App() {
     });
   };
 
-  //取建立產品的值
+  // 取建立產品的值
   const handleNewProductChange = (e) => {
     const { id, value } = e.target;
     setNewProduct({
@@ -581,12 +584,23 @@ function App() {
   // 先宣告工具 抓取產品資料 getProducts
   const getProducts = async () => {
     try {
-      const res = await axios.get(
-        `${API_BASE}/api/${API_PATH}/admin/products`
-      )
-      setProducts(res.data.products)
+      let page = 1;
+      let allProducts = [];
+      let hasNext = true;
+
+      while (hasNext) {
+        const res = await axios.get(
+          `${API_BASE}/api/${API_PATH}/admin/products?page=${page}`
+        );
+
+        allProducts = allProducts.concat(res.data.products);
+        hasNext = res.data.pagination.has_next;
+        page++;
+      }
+
+      setProducts(allProducts);
     } catch {
-      alert('取得產品資料失敗，請稍後再試')
+      alert('取得產品資料失敗，請稍後再試');
     }
   };
 
@@ -725,7 +739,7 @@ function App() {
     }
   };
 
-  //刪除單一品項
+  // 刪除單一品項
   const deleteProduct = async (id) => {
     if (!window.confirm('確定要刪除這個品項嗎？')) return;
 
@@ -754,7 +768,7 @@ function App() {
     }
   }
 
-  //編輯產品資訊
+  // 編輯產品資訊
   const updateProduct = async() => {
     try {
       await axios.put(
@@ -839,28 +853,30 @@ function App() {
 
   /* ---------- product modal ---------- */
   useEffect(() => {
-    if (tempProduct && productModalRef.current) {
-      // 如果已有 instance 先釋放
-      if (productModalInstance.current) {
-        productModalInstance.current.dispose();
-        productModalInstance.current = null;
-      }
+  if (!tempProduct || !productModalRef.current) return;
 
-      // 建立新的 Modal instance
-      productModalInstance.current = new Modal(productModalRef.current);
-      productModalInstance.current.show();
+  // Modal
+  productModalInstance.current?.dispose();
+  productModalInstance.current = new Modal(productModalRef.current);
+  productModalInstance.current.show();
 
-      // 當 Modal 關閉時自動清空 tempProduct 和 instance
-      const modalEl = productModalRef.current;
-      const handleHidden = () => {
-        setTempProduct(null);
-        productModalInstance.current.dispose();
-        productModalInstance.current = null;
-        modalEl.removeEventListener('hidden.bs.modal', handleHidden);
-      };
-      modalEl.addEventListener('hidden.bs.modal', handleHidden);
-    }
-  }, [tempProduct]);
+  const modalEl = productModalRef.current;
+
+  // ✅【關鍵】初始化 Collapse（toggle: false）
+  const collapseEls = modalEl.querySelectorAll('.accordion-collapse');
+  collapseEls.forEach(el => {
+    new Collapse(el, { toggle: false });
+  });
+
+  const handleHidden = () => {
+    setTempProduct(null);
+    productModalInstance.current?.dispose();
+    productModalInstance.current = null;
+    modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+  };
+
+  modalEl.addEventListener('hidden.bs.modal', handleHidden);
+}, [tempProduct]);
 
   /* ---------- add modal ---------- */
   useEffect(() => {
@@ -959,7 +975,7 @@ function App() {
             editProductRef={editProductRef}
             modalRef={editProductRef}
             closeEditModal={closeEditModal}
-            updateProduct={updateProduct}  // 呼叫 updateProduct
+            updateProduct={updateProduct}  
             newProduct={newProduct}
             handleNewProductChange={handleNewProductChange}
             setNewProduct={setNewProduct}
@@ -983,7 +999,7 @@ function App() {
                     required
                     autoFocus
                   />
-                  <label htmlFor="username">Email address</label>
+                  <label htmlFor="username">帳號</label>
                 </div>
                 <div className="form-floating">
                   <input
@@ -995,7 +1011,7 @@ function App() {
                     onChange={handleInputChange}
                     required
                   />
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="password">密碼</label>
                 </div>
                 <button
                   className="btn btn-lg btn-primary w-100 mt-3"
