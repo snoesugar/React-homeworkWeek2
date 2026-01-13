@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ToastContainer, toast } from 'react-toastify';
-import { Modal } from 'bootstrap';
+import { Modal, Collapse } from 'bootstrap';
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css'
@@ -10,171 +10,492 @@ const API_BASE = import.meta.env.VITE_API_BASE
 // 請自行替換 API_PATH
 const API_PATH = import.meta.env.VITE_API_PATH
 
- //產品元件
-  const ProductList = ({ products, openModal }) => {
-    return (
-      <>
-        {products && products.length > 0 ? (
-          products.map((item) => (
-            <tr key={item.id} className="align-middle">
-              <td>{item.title}</td>
-              <td>{item.origin_price}</td>
-              <td>{item.price}</td>
-              <td>{item.is_enabled ? (<span className="badge bg-success">啟用</span>)
-              : <span className="badge bg-danger">未啟用</span>}</td>
-              <td>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => openModal(item)}
-                >
-                  查看細節
-                </button>
-              </td>
-              <td>
-                <div className="btn-group">
-                  <button type="button" className="btn btn-outline-primary btn-sm">
-                    編輯
-                  </button>
-                  <button type="button" className="btn btn-outline-danger btn-sm">
-                    刪除
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="5">尚無產品資料</td>
-          </tr>
-        )}
-      </>
-    );
-  };
-
-  //查看細節的 Modal元件
-  const TempProduct = ({ tempProduct, closeModal }) => {
-    if (!tempProduct) return null;
-    return (
-      <div
-        className="modal fade"
-        id="productModal"
-        tabIndex="-1"
-      >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header border-0 bg-primary-100">
-              <h5 className="modal-title">
-                {tempProduct.title}
-                  <span className="badge rounded-pill bg-primary ms-2">
-                    {tempProduct.category}
-                  </span>
-              </h5>
+// 產品元件
+const ProductList = ({ products, openModal, deleteProduct, setNewProduct, openEditModal }) => {
+  return (
+    <>
+      {products && products.length > 0 ? (
+        products.map((item) => (
+          <tr key={item.id} className="align-middle">
+            <td>{item.title}</td>
+            <td>{item.origin_price}</td>
+            <td>{item.price}</td>
+            <td>{item.is_enabled ? (<span className="badge bg-success">啟用</span>)
+            : <span className="badge bg-danger">未啟用</span>}</td>
+            <td>
               <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                onClick={closeModal}
-                aria-label="Close"
-              ></button>
+                className="btn btn-primary"
+                onClick={() => openModal(item)}
+              >
+                查看細節
+              </button>
+            </td>
+            <td>
+              <div className="btn-group">
+                <button 
+                type="button" 
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => {
+                  setNewProduct(item);  // 填入要編輯的資料
+                  openEditModal();       // 開啟編輯 modal
+                }}
+                >
+                  編輯
+                </button>
+                <button 
+                type="button" 
+                className="btn btn-outline-danger btn-sm"
+                onClick={() => deleteProduct(item.id)}
+                >
+                  刪除
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="5">尚無產品資料</td>
+        </tr>
+      )}
+    </>
+  );
+};
+
+// 查看細節的 Modal元件
+const TempProduct = ({ tempProduct, modalRef, closeModal }) => {
+  if (!tempProduct) return null;
+
+  const collapseId = `collapse-${tempProduct.id}`;
+  const accordionId = `accordion-${tempProduct.id}`;
+
+  return (
+    <div className="modal fade" ref={modalRef} tabIndex="-1">
+      <div className="modal-dialog">
+        <div className="modal-content">
+          <div className="modal-header border-0 bg-primary-100">
+            <h5 className="modal-title">
+              {tempProduct.title}
+              <span className="badge rounded-pill bg-primary ms-2">
+                {tempProduct.category}
+              </span>
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={closeModal}
+              aria-label="Close"
+            ></button>
+          </div>
+          <div className="card border-0">
+            <img
+              src={tempProduct.imageUrl}
+              className="card-img-top primary-image rounded-0"
+              alt="主圖"
+            />
+            <div className="card-body bg-primary-100">
+              <p className="card-text">商品描述：{tempProduct.content}</p>
+              <p className="card-text">商品內容：{tempProduct.description}</p>
+              <div className="d-flex justify-content-end mb-3">
+                <p className="card-text text-secondary">
+                  <del>{tempProduct.origin_price}</del>
+                </p>
+                元 / {tempProduct.price} 元
+              </div>
             </div>
-              <div className="card border-0">
-                <img
-                  src={tempProduct.imageUrl}
-                  className="card-img-top primary-image rounded-0"
-                  alt="主圖"
-                />
-                <div className="card-body bg-primary-100">
-                  <p className="card-text">商品描述：{tempProduct.content}</p>
-                  <p className="card-text">商品內容：{tempProduct.description}</p>
-                  <div className="d-flex justify-content-end mb-3">
-                    <p className="card-text text-secondary">
-                      <del>{tempProduct.origin_price}</del>
-                    </p>
-                    元 / {tempProduct.price} 元
-                  </div>
-                </div>
-                <div className="accordion" id="accordionExample">
-                  <div className="accordion-item border-0">
-                    <h2 className="accordion-header" id="headingOne">
-                      <button className="accordion-button collapsed product-images" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        更多圖片
-                      </button>
-                    </h2>
-                    <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                      <div className="accordion-body">
-                        {tempProduct.imagesUrl?.map((img, index) => (
-                        <img key={index} src={img} className="images me-3 mb-3" alt="副圖" />
-                        ))}
-                      </div>
-                    </div>
+            <div className="accordion" id={accordionId}>
+              <div className="accordion-item border-0">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed product-images"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#${collapseId}`}
+                    aria-expanded="false"
+                    aria-controls={collapseId}
+                  >
+                    更多圖片
+                  </button>
+                </h2>
+                <div id={collapseId} className="accordion-collapse collapse">
+                  <div className="accordion-body">
+                    {tempProduct.imagesUrl?.map((img, index) => (
+                      <img
+                        key={index}
+                        src={img}
+                        className="images me-3 mb-3"
+                        alt={`副圖 ${index + 1}`}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
+            </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  //新增的 Modal元件
-  const AddProduct = ({ closeAddModal }) => {
-    return (
-      <div className="modal fade" 
-      id="addModal"
-      tabIndex="-1"
-      >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-              <button type="button" className="btn-close" onClick={closeAddModal}></button>
-            </div>
-            <div className="modal-body">
-              ...
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={closeAddModal}>Close</button>
-              <button type="button" className="btn btn-primary">Save changes</button>
-            </div>
+// 新增的 Modal元件
+const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handleNewProductChange, setNewProduct }) => {
+  return (
+    <div className="modal fade" 
+    ref={modalRef}
+    tabIndex="-1"
+    >
+      <div className="modal-dialog">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h1 className="modal-title fs-5" id="exampleModalLabel">建立新的產品</h1>
+            <button type="button" className="btn-close" onClick={closeAddModal}></button>
+          </div>
+          <div className="modal-body">
+            <form className="text-start">
+              <div className="mb-3">
+                <label htmlFor="title" className="form-label">標題</label>
+                <input 
+                type="text" 
+                className="form-control" 
+                id="title" 
+                value={newProduct.title}
+                onChange={handleNewProductChange}
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label htmlFor="content" className="form-label">產品說明</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="content"
+                  value={newProduct.content}
+                  onChange={handleNewProductChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="description" className="form-label">產品描述</label>
+                <input
+                type="text"
+                className="form-control"
+                id="description"
+                value={newProduct.description}
+                onChange={handleNewProductChange}
+              />
+              </div>
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="category" className="form-label">分類</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="category"
+                      value={newProduct.category}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="unit" className="form-label">單位</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="unit"
+                      value={newProduct.unit}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="origin_price" className="form-label">產品原價</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="origin_price"
+                      value={newProduct.origin_price}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="price" className="form-label">產品售價</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="price"
+                      value={newProduct.price}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <hr />
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="imageUrl" className="form-label">輸入主圖網址</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="imageUrl"
+                      value={newProduct.imageUrl}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                {(newProduct.imagesUrl || []).map((img, index) => (
+                  <div className="col-6" key={index}>
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor={`imagesUrl${index}`}>輸入圖片網址 {index + 1}</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id={`imagesUrl${index}`}
+                        value={img}
+                        onChange={(e) => {
+                          const newImages = [...newProduct.imagesUrl];
+                          newImages[index] = e.target.value;
+                          setNewProduct({
+                            ...newProduct,
+                            imagesUrl: newImages
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </form>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={closeAddModal}>取消</button>
+            <button type="button" className="btn btn-primary" onClick={addNewProduct}>儲存</button>
           </div>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
+}
+
+// 編輯的 Modal元件
+const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct, handleNewProductChange, setNewProduct }) => {
+  return (
+    <div className="modal fade" 
+    ref={editProductRef}
+    tabIndex="-1"
+    >
+      <div className="modal-dialog">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h1 className="modal-title fs-5" id="exampleModalLabel">編輯產品</h1>
+            <button type="button" className="btn-close" onClick={closeEditModal}></button>
+          </div>
+          <div className="modal-body">
+            <form className="text-start">
+              <div className="mb-3">
+                <label htmlFor="title" className="form-label">標題</label>
+                <input 
+                type="text" 
+                className="form-control" 
+                id="title" 
+                value={newProduct.title}
+                onChange={handleNewProductChange}
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label htmlFor="content" className="form-label">產品說明</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="content"
+                  value={newProduct.content}
+                  onChange={handleNewProductChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="description" className="form-label">產品描述</label>
+                <input
+                type="text"
+                className="form-control"
+                id="description"
+                value={newProduct.description}
+                onChange={handleNewProductChange}
+              />
+              </div>
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="category" className="form-label">分類</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="category"
+                      value={newProduct.category}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="unit" className="form-label">單位</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="unit"
+                      value={newProduct.unit}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="origin_price" className="form-label">產品原價</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="origin_price"
+                      value={newProduct.origin_price}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="price" className="form-label">產品售價</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="price"
+                      value={newProduct.price}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <hr />
+              <div className="row">
+                <div className="col-6">
+                  <div className="mb-3">
+                    <label htmlFor="imageUrl" className="form-label">輸入主圖網址</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="imageUrl"
+                      value={newProduct.imageUrl}
+                      onChange={handleNewProductChange}
+                    />
+                  </div>
+                </div>
+                {(newProduct.imagesUrl || []).map((img, index) => (
+                  <div className="col-6" key={index}>
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor={`imagesUrl${index}`}>輸入圖片網址 {index + 1}</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id={`imagesUrl${index}`}
+                        value={img}
+                        onChange={(e) => {
+                          const newImages = [...newProduct.imagesUrl];
+                          newImages[index] = e.target.value;
+                          setNewProduct({
+                            ...newProduct,
+                            imagesUrl: newImages
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </form>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={closeEditModal}>取消</button>
+            <button type="button" className="btn btn-primary" onClick={updateProduct}>儲存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   });
+  const [newProduct, setNewProduct] = useState({
+    title: "",
+    category: "",
+    origin_price: "",
+    price: "",
+    unit: "",
+    description: "",
+    content: "",
+    is_enabled: "",
+    imageUrl: "",
+    imagesUrl: ["", "", "", "", ""]
+  })
   const [isAuth, setIsAuth] = useState(false);
   const [products, setProducts] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  
+  const productModalRef = useRef(null);
+  const addModalRef = useRef(null);
+  const editProductRef = useRef(null);
+  const productModalInstance = useRef(null);
+  const addModalInstance = useRef(null);
+  const editProductInstance = useRef(null);
 
-  // 打開查看細節的 Modal
-  const openModal = (item) => {
-    setTempProduct(item); // 不直接呼叫 Modal.show
+  /* ---------- 查看細節 ---------- */
+  const openModal = (item) => setTempProduct(item);
+  const closeModal = () => {
+    if (productModalInstance.current) {
+      productModalInstance.current.hide();
+    }
   };
 
-  // 打開建立新的產品的 Modal
+  /* ---------- 新增 Modal ---------- */
   const openAddModal = () => {
+    // 重置 newProduct
+    setNewProduct({
+      title: "",
+      category: "",
+      origin_price: "",
+      price: "",
+      unit: "",
+      description: "",
+      content: "",
+      is_enabled: 0,
+      imageUrl: "",
+      imagesUrl: ["", "", "", "", ""]
+    });
+
     setIsAddOpen(true);
   };
-  
-  // 關閉查看細節的 Modal
-  const closeModal = () => {
-    const modalEl = document.getElementById('productModal');
-    const modalInstance = Modal.getInstance(modalEl);
-    modalInstance?.hide();
-    setTempProduct(null);
+  const closeAddModal = () => {
+    addModalInstance.current.hide();
+    setIsAddOpen(false);
   };
 
-  // 關閉建立新的產品的 Modal
-  const closeAddModal = () => {
-    const modalEl = document.getElementById('addModal');
-    Modal.getInstance(modalEl)?.hide();
-    setIsAddOpen(false);
+  /* ---------- 編輯 Modal ---------- */
+  const openEditModal = () => setIsEditOpen(true);
+  const closeEditModal = () => {
+    if (editProductInstance.current) editProductInstance.current.hide();
+    setIsEditOpen(false);
   };
 
   // 取input裡面的值
@@ -183,6 +504,15 @@ function App() {
     setFormData({
       ...formData,
       [id]: value,
+    });
+  };
+
+  //取建立產品的值
+  const handleNewProductChange = (e) => {
+    const { id, value } = e.target;
+    setNewProduct({
+      ...newProduct,
+      [id]: value
     });
   };
 
@@ -207,46 +537,46 @@ function App() {
       autoClose: 1500
     });
     }
-  }
+  };
 
   // 登入送出：取得 token 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const res = await axios.post(
-      `${API_BASE}/admin/signin`,
-      {
-        username: formData.username,
-        password: formData.password,
-      }
-    );
+    try {
+      const res = await axios.post(
+        `${API_BASE}/admin/signin`,
+        {
+          username: formData.username,
+          password: formData.password,
+        }
+      );
 
-    const { token, expired } = res.data;
+      const { token, expired } = res.data;
 
-    // 存 token 到 cookie
-    document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
+      // 存 token 到 cookie
+      document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
 
-    // 顯示 Toast
-    toast.success('登入成功，正在跳轉頁面...', {
-      position: "top-right",
-      autoClose: 1500, // 1.5 秒自動消失
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
-    
-    await authorization(); 
-    
+      // 顯示 Toast
+      toast.success('登入成功，正在跳轉頁面...', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      await authorization(); 
+      
 
-  } catch {
-    toast.error('登入失敗，請確認帳密', {
-      position: "top-right",
-      autoClose: 1500
-    });
-  }
-};
+    } catch {
+      toast.error('登入失敗，請確認帳密', {
+        position: "top-right",
+        autoClose: 1500
+      });
+    }
+  };
 
   // 先宣告工具 抓取產品資料 getProducts
   const getProducts = async () => {
@@ -258,7 +588,7 @@ function App() {
     } catch {
       alert('取得產品資料失敗，請稍後再試')
     }
-  }
+  };
 
   // 確認是否登入
   const checkLogin = async () => {
@@ -303,7 +633,49 @@ function App() {
       autoClose: 1500
     });
     }
-  }
+  };
+
+  // 建立新產品
+  const addNewProduct = async () => {
+    try {
+      await axios.post(
+        `${API_BASE}/api/${API_PATH}/admin/product`,
+        {
+          data: {
+            ...newProduct,
+            origin_price: Number(newProduct.origin_price),
+            price: Number(newProduct.price),
+            is_enabled: 1
+          }
+        }
+      );
+
+      toast.success('新增產品成功', { autoClose: 1500 });
+
+      closeAddModal();   // 關 Modal
+      getProducts();     // 重新抓資料
+
+      // 重置表單
+      setNewProduct({
+        title: "",
+        category: "",
+        origin_price: "",
+        price: "",
+        unit: "",
+        description: "",
+        content: "",
+        is_enabled: "",
+        imageUrl: "",
+        imagesUrl: ["", "", "", "", ""]
+      });
+
+    } catch {
+      toast.error('新增產品失敗', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
+  };
 
   // 刪除所有品項
   const deleteAllProduct = async () => {
@@ -351,7 +723,88 @@ function App() {
       autoClose: 1500
     });
     }
+  };
+
+  //刪除單一品項
+  const deleteProduct = async (id) => {
+    if (!window.confirm('確定要刪除這個品項嗎？')) return;
+
+    try {
+      await axios.delete(
+        `${API_BASE}/api/${API_PATH}/admin/product/${id}`,
+      )
+      
+      toast.success('刪除品項成功', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // 重新取得產品（畫面同步）
+      getProducts();
+
+    } catch {
+      toast.error('刪除品項失敗', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
   }
+
+  //編輯產品資訊
+  const updateProduct = async() => {
+    try {
+      await axios.put(
+        `${API_BASE}/api/${API_PATH}/admin/product/${newProduct.id}`,
+        {
+          data: {
+            ...newProduct,
+            origin_price: Number(newProduct.origin_price),
+            price: Number(newProduct.price)
+          }
+        }
+      );
+      
+      toast.success('編輯品項成功', {
+        position: "top-right",
+        autoClose: 1500, // 1.5 秒自動消失
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // 關閉編輯 modal
+      if (editProductInstance.current) editProductInstance.current.hide();
+
+      // 重新抓資料
+      getProducts();
+
+      // 重置 newProduct
+      setNewProduct({
+        title: "",
+        category: "",
+        origin_price: "",
+        price: "",
+        unit: "",
+        description: "",
+        content: "",
+        is_enabled: "",
+        imageUrl: "",
+        imagesUrl: ["", "", "", "", ""]
+      });
+
+    } catch {
+      toast.error('編輯品項失敗', {
+      position: "top-right",
+      autoClose: 1500
+    });
+    }
+  }
+
 
   // 確認登入，重整還會在後台
   useEffect(() => {
@@ -384,30 +837,72 @@ function App() {
     initAuth();
   }, []);
 
-  // 監聽 tempProduct 可以用useRef
+  /* ---------- product modal ---------- */
   useEffect(() => {
-    if (tempProduct) {
-      const modalEl = document.getElementById('productModal');
-      const modal = new Modal(modalEl);
-      modal.show();
-    }
-  }, [tempProduct]); // 只要 tempProduct 改變就觸發
+    if (tempProduct && productModalRef.current) {
+      // 如果已有 instance 先釋放
+      if (productModalInstance.current) {
+        productModalInstance.current.dispose();
+        productModalInstance.current = null;
+      }
 
-  // 監聽 addModal 可以用useRef
+      // 建立新的 Modal instance
+      productModalInstance.current = new Modal(productModalRef.current);
+      productModalInstance.current.show();
+
+      // 當 Modal 關閉時自動清空 tempProduct 和 instance
+      const modalEl = productModalRef.current;
+      const handleHidden = () => {
+        setTempProduct(null);
+        productModalInstance.current.dispose();
+        productModalInstance.current = null;
+        modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+      };
+      modalEl.addEventListener('hidden.bs.modal', handleHidden);
+    }
+  }, [tempProduct]);
+
+  /* ---------- add modal ---------- */
   useEffect(() => {
-    if (isAddOpen) {
-      const modalEl = document.getElementById('addModal');
-      const modal = new Modal(modalEl);
-      modal.show();
+    if (isAddOpen && addModalRef.current) {
+      if (addModalInstance.current) {
+        addModalInstance.current.dispose();
+        addModalInstance.current = null;
+      }
+
+      addModalInstance.current = new Modal(addModalRef.current);
+      addModalInstance.current.show();
+
+      const modalEl = addModalRef.current;
+      const handleHidden = () => {
+        setIsAddOpen(false);
+        addModalInstance.current.dispose();
+        addModalInstance.current = null;
+        modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', handleHidden);
     }
   }, [isAddOpen]);
 
-  // 建立新產品
-  // const newProduct = async () => {
+  /* ---------- edit modal ---------- */
+  useEffect(() => {
+    if (isEditOpen && editProductRef.current) {
+      editProductInstance.current?.dispose();
+      editProductInstance.current = new Modal(editProductRef.current);
+      editProductInstance.current.show();
 
-  // }
+      const modalEl = editProductRef.current;
+      const handleHidden = () => {
+        setIsEditOpen(false);
+        editProductInstance.current?.dispose();
+        editProductInstance.current = null;
+        modalEl.removeEventListener('hidden.bs.modal', handleHidden);
+      };
 
-
+      modalEl.addEventListener('hidden.bs.modal', handleHidden);
+    }
+  }, [isEditOpen]);
 
   return (
     <>
@@ -439,13 +934,36 @@ function App() {
                   <ProductList
                     products={products}
                     openModal={openModal}
+                    deleteProduct={deleteProduct}
+                    setNewProduct={setNewProduct}
+                    openEditModal={openEditModal}
                   />
                 </tbody>
               </table>
             </div>
           </div>
-          <TempProduct tempProduct={tempProduct} closeModal={closeModal} />
-          <AddProduct closeAddModal={closeAddModal} />
+          <TempProduct
+            tempProduct={tempProduct}
+            modalRef={productModalRef}
+            closeModal={closeModal}
+          />
+          <AddProduct
+            modalRef={addModalRef}
+            closeAddModal={closeAddModal}
+            addNewProduct={addNewProduct}
+            newProduct={newProduct}
+            handleNewProductChange={handleNewProductChange}
+            setNewProduct={setNewProduct} 
+          />
+          <EditProduct
+            editProductRef={editProductRef}
+            modalRef={editProductRef}
+            closeEditModal={closeEditModal}
+            updateProduct={updateProduct}  // 呼叫 updateProduct
+            newProduct={newProduct}
+            handleNewProductChange={handleNewProductChange}
+            setNewProduct={setNewProduct}
+          />
           <ToastContainer />
         </div>
       ) : (
