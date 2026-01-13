@@ -48,3 +48,10 @@ img {
   border-left: 6px solid #445e3f; /* 左側粗線，顏色可改 */
   background-color: #fff;          /* 框內背景 */
 }
+
+.preview-image {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
