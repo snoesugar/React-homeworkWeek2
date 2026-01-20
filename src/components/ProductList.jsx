@@ -5,7 +5,7 @@ const ProductList = ({ products, openModal, deleteProduct, setNewProduct, openEd
         ? (
           products.map(item => (
             <tr key={item.id} className="align-middle">
-              <td>{item.title}</td>
+              <td className="w-25">{item.title}</td>
               <td>{item.origin_price}</td>
               <td>{item.price}</td>
               <td>

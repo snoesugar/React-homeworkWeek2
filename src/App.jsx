@@ -4,10 +4,11 @@ import { Modal, Collapse } from 'bootstrap'
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
 
-import ProductList from './assets/components/ProductList' // 產品元件
-import TempProduct from './assets/components/TempProduct' // 查看細節的 Modal元件
-import AddProduct from './assets/components/AddProduct' // 新增的 Modal元件
-import EditProduct from './assets/components/EditProduct' // 編輯的 Modal元件
+import ProductList from './components/ProductList' // 產品元件
+import TempProduct from './components/TempProduct' // 查看細節的 Modal元件
+import AddProduct from './components/AddProduct' // 新增的 Modal元件
+import EditProduct from './components/EditProduct' // 編輯的 Modal元件
+import Pagination from './components/Pagination' // 分頁元件
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE
@@ -38,6 +39,7 @@ function App() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [errors, setErrors] = useState({})
+  const [pagination, setPagination] = useState({})
   const productModalRef = useRef(null)
   const addModalRef = useRef(null)
   const editProductRef = useRef(null)
@@ -74,6 +76,7 @@ function App() {
   const closeAddModal = () => {
     addModalInstance.current.hide()
     setIsAddOpen(false)
+    setErrors({}) // 關閉 Modal 時清空錯誤
   }
 
   /* ---------- 編輯 Modal ---------- */
@@ -81,6 +84,7 @@ function App() {
   const closeEditModal = () => {
     if (editProductInstance.current) editProductInstance.current.hide()
     setIsEditOpen(false)
+    setErrors({}) // 關閉 Modal 時清空錯誤
   }
 
   // 取帳號密碼input裡面的值
@@ -94,17 +98,17 @@ function App() {
 
   // 取建立產品的值
   const handleNewProductChange = (e) => {
-    const { name, value, id } = e.target
+    const { value, id } = e.target
     setNewProduct({
       ...newProduct,
       [id]: value,
     })
 
     // 有錯就清掉該欄位錯誤
-    if (errors[name]) {
+    if (errors[id]) {
       setErrors({
         ...errors,
-        [name]: '',
+        [id]: '',
       })
     }
   }
@@ -174,26 +178,20 @@ function App() {
   }
 
   // 先宣告工具 抓取產品資料 getProducts
-  const getProducts = async () => {
+  const getProducts = async (page = 1) => {
     try {
-      let page = 1
-      let allProducts = []
-      let hasNext = true
+      const res = await axios.get(
+        `${API_BASE}/api/${API_PATH}/admin/products?page=${page}`,
+      )
 
-      while (hasNext) {
-        const res = await axios.get(
-          `${API_BASE}/api/${API_PATH}/admin/products?page=${page}`,
-        )
-
-        allProducts = allProducts.concat(res.data.products)
-        hasNext = res.data.pagination.has_next
-        page++
-      }
-
-      setProducts(allProducts)
+      setProducts(res.data.products) // 只放當頁 10 筆
+      setPagination(res.data.pagination) // 分頁資訊
     }
     catch {
-      alert('取得產品資料失敗，請稍後再試')
+      toast.error('取得產品資料失敗，請稍後再試', {
+        position: 'top-right',
+        autoClose: 1500,
+      })
     }
   }
 
@@ -475,6 +473,11 @@ function App() {
     return errors
   }
 
+  // 先抓第一頁
+  useEffect(() => {
+    getProducts(1)
+  }, [])
+
   // 確認登入，重整還會在後台
   useEffect(() => {
     const initAuth = async () => {
@@ -614,6 +617,10 @@ function App() {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                pagination={pagination}
+                changePage={getProducts}
+              />
             </div>
             <TempProduct
               tempProduct={tempProduct}
