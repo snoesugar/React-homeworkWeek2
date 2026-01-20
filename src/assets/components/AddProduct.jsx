@@ -91,7 +91,6 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
                       onChange={handleNewProductChange}
                       min="0"
                       step="1"
-                      required
                     />
                     {errors.origin_price && (
                       <div className="invalid-feedback">{errors.origin_price}</div>
@@ -109,7 +108,6 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
                       onChange={handleNewProductChange}
                       min="0"
                       step="1"
-                      required
                     />
                     {errors.price && (
                       <div className="invalid-feedback">{errors.price}</div>
