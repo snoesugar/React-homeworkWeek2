@@ -3,529 +3,17 @@ import { ToastContainer, toast } from 'react-toastify'
 import { Modal, Collapse } from 'bootstrap'
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
+
+import ProductList from './assets/components/ProductList' // 產品元件
+import TempProduct from './assets/components/TempProduct' // 查看細節的 Modal元件
+import AddProduct from './assets/components/AddProduct' // 新增的 Modal元件
+import EditProduct from './assets/components/EditProduct' // 編輯的 Modal元件
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
 // 請自行替換 API_PATH
 const API_PATH = import.meta.env.VITE_API_PATH
-
-// 產品元件
-const ProductList = ({ products, openModal, deleteProduct, setNewProduct, openEditModal }) => {
-  return (
-    <>
-      {products && products.length > 0
-        ? (
-          products.map(item => (
-            <tr key={item.id} className="align-middle">
-              <td>{item.title}</td>
-              <td>{item.origin_price}</td>
-              <td>{item.price}</td>
-              <td>
-                {item.is_enabled
-                  ? (<span className="badge bg-success">啟用</span>)
-                  : <span className="badge bg-danger">未啟用</span>}
-              </td>
-              <td>
-                <button
-                  className="btn btn-primary"
-                  disabled={!item.is_enabled}
-                  onClick={() => openModal(item)}
-                >
-                  查看細節
-                </button>
-              </td>
-              <td>
-                <div className="btn-group">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => {
-                      setNewProduct(item) // 填入要編輯的資料
-                      openEditModal() // 開啟編輯 modal
-                    }}
-                  >
-                    編輯
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={() => deleteProduct(item.id)}
-                  >
-                    刪除
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        )
-        : (
-          <tr>
-            <td colSpan="5">尚無產品資料</td>
-          </tr>
-        )}
-    </>
-  )
-}
-
-// 查看細節的 Modal元件
-const TempProduct = ({ tempProduct, modalRef, closeModal }) => {
-  if (!tempProduct) return null
-
-  const collapseId = `collapse-${tempProduct.id}`
-  const accordionId = `accordion-${tempProduct.id}`
-
-  return (
-    <div className="modal fade" ref={modalRef} tabIndex="-1">
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header border-0 bg-primary-100">
-            <h5 className="modal-title">
-              {tempProduct.title}
-              <span className="badge rounded-pill bg-primary ms-2">
-                {tempProduct.category}
-              </span>
-            </h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={closeModal}
-              aria-label="Close"
-            >
-            </button>
-          </div>
-          <div className="card border-0">
-            <img
-              src={tempProduct.imageUrl}
-              className="card-img-top primary-image rounded-0"
-              alt="主圖"
-            />
-            <div className="card-body bg-primary-100">
-              <p className="card-text">
-                商品描述：
-                {tempProduct.content}
-              </p>
-              <p className="card-text">
-                商品內容：
-                {tempProduct.description}
-              </p>
-              <div className="d-flex justify-content-end mb-3">
-                <p className="card-text text-secondary">
-                  <del>{tempProduct.origin_price}</del>
-                </p>
-                元 /
-                {' '}
-                {tempProduct.price}
-                {' '}
-                元
-              </div>
-            </div>
-            <div className="accordion" id={accordionId}>
-              <div className="accordion-item border-0">
-                <h2 className="accordion-header">
-                  <button
-                    className="accordion-button collapsed product-images"
-                    type="button"
-                    onClick={() => {
-                      const el = document.getElementById(collapseId)
-                      if (!el) return
-                      const instance = Collapse.getOrCreateInstance(el)
-                      instance.toggle()
-                    }}
-                  >
-                    更多圖片
-                  </button>
-                </h2>
-                <div id={collapseId} className="accordion-collapse collapse">
-                  <div className="accordion-body">
-                    {tempProduct.imagesUrl?.map((img, index) => (
-                      <img
-                        key={index}
-                        src={img}
-                        className="images me-3 mb-3"
-                        alt={`副圖 ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// 新增的 Modal元件
-const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handleNewProductChange, setNewProduct }) => {
-  return (
-    <div
-      className="modal fade"
-      ref={modalRef}
-      tabIndex="-1"
-    >
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h1 className="modal-title fs-5" id="exampleModalLabel">建立新的產品</h1>
-            <button type="button" className="btn-close" onClick={closeAddModal}></button>
-          </div>
-          <div className="modal-body">
-            <form className="text-start">
-              <div className="mb-3">
-                <label htmlFor="title" className="form-label">標題</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="title"
-                  value={newProduct.title}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="content" className="form-label">產品說明</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="content"
-                  value={newProduct.content}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="description" className="form-label">產品描述</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  value={newProduct.description}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="category" className="form-label">分類</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="category"
-                      value={newProduct.category}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="unit" className="form-label">單位</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="unit"
-                      value={newProduct.unit}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="origin_price" className="form-label">產品原價</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="origin_price"
-                      value={newProduct.origin_price}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="price" className="form-label">產品售價</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="price"
-                      value={newProduct.price}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="form-check mb-3">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="is_enabled"
-                      checked={newProduct.is_enabled === 1}
-                      onChange={(e) => {
-                        setNewProduct({
-                          ...newProduct,
-                          is_enabled: e.target.checked ? 1 : 0,
-                        })
-                      }}
-                    />
-                    <label className="form-check-label" htmlFor="is_enabled">
-                      是否啟用
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <hr />
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="imageUrl" className="form-label">輸入主圖網址</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="imageUrl"
-                      value={newProduct.imageUrl}
-                      onChange={handleNewProductChange}
-                    />
-                    {newProduct.imageUrl && (
-                      <div className="mt-2">
-                        <img
-                          src={newProduct.imageUrl}
-                          alt="主圖預覽"
-                          className="preview-image"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {(newProduct.imagesUrl || []).map((img, index) => (
-                  <div className="col-6" key={index}>
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor={`imagesUrl${index}`}>
-                        輸入圖片網址
-                        {index + 1}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id={`imagesUrl${index}`}
-                        value={img}
-                        onChange={(e) => {
-                          const newImages = [...newProduct.imagesUrl]
-                          newImages[index] = e.target.value
-                          setNewProduct({
-                            ...newProduct,
-                            imagesUrl: newImages,
-                          })
-                        }}
-                      />
-                      {img && (
-                        <img
-                          src={img}
-                          alt={`副圖預覽 ${index + 1}`}
-                          className="mt-2 preview-image"
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </form>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={closeAddModal}>取消</button>
-            <button type="button" className="btn btn-primary" onClick={addNewProduct}>儲存</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// 編輯的 Modal元件
-const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct, handleNewProductChange, setNewProduct }) => {
-  return (
-    <div
-      className="modal fade"
-      ref={editProductRef}
-      tabIndex="-1"
-    >
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h1 className="modal-title fs-5" id="exampleModalLabel">編輯產品</h1>
-            <button type="button" className="btn-close" onClick={closeEditModal}></button>
-          </div>
-          <div className="modal-body">
-            <form className="text-start">
-              <div className="mb-3">
-                <label htmlFor="title" className="form-label">標題</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="title"
-                  value={newProduct.title}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="content" className="form-label">產品說明</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="content"
-                  value={newProduct.content}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="description" className="form-label">產品描述</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="description"
-                  value={newProduct.description}
-                  onChange={handleNewProductChange}
-                />
-              </div>
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="category" className="form-label">分類</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="category"
-                      value={newProduct.category}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="unit" className="form-label">單位</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="unit"
-                      value={newProduct.unit}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="origin_price" className="form-label">產品原價</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="origin_price"
-                      value={newProduct.origin_price}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="price" className="form-label">產品售價</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="price"
-                      value={newProduct.price}
-                      onChange={handleNewProductChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="form-check mb-3">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="is_enabled"
-                      checked={newProduct.is_enabled === 1}
-                      onChange={(e) => {
-                        setNewProduct({
-                          ...newProduct,
-                          is_enabled: e.target.checked ? 1 : 0,
-                        })
-                      }}
-                    />
-                    <label className="form-check-label" htmlFor="is_enabled">
-                      是否啟用
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <hr />
-              <div className="row">
-                <div className="col-6">
-                  <div className="mb-3">
-                    <label htmlFor="imageUrl" className="form-label">輸入主圖網址</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="imageUrl"
-                      value={newProduct.imageUrl}
-                      onChange={handleNewProductChange}
-                    />
-                    {newProduct.imageUrl && (
-                      <div className="mt-2">
-                        <img
-                          src={newProduct.imageUrl}
-                          alt="主圖預覽"
-                          className="preview-image"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {(newProduct.imagesUrl || []).map((img, index) => (
-                  <div className="col-6" key={index}>
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor={`imagesUrl${index}`}>
-                        輸入圖片網址
-                        {index + 1}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id={`imagesUrl${index}`}
-                        value={img}
-                        onChange={(e) => {
-                          const newImages = [...newProduct.imagesUrl]
-                          newImages[index] = e.target.value
-                          setNewProduct({
-                            ...newProduct,
-                            imagesUrl: newImages,
-                          })
-                        }}
-                      />
-                      {img && (
-                        <img
-                          src={img}
-                          alt={`副圖預覽 ${index + 1}`}
-                          className="mt-2 preview-image"
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </form>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={closeEditModal}>取消</button>
-            <button type="button" className="btn btn-primary" onClick={updateProduct}>儲存</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function App() {
   const [formData, setFormData] = useState({
@@ -549,6 +37,7 @@ function App() {
   const [tempProduct, setTempProduct] = useState(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [errors, setErrors] = useState({})
   const productModalRef = useRef(null)
   const addModalRef = useRef(null)
   const editProductRef = useRef(null)
@@ -605,11 +94,19 @@ function App() {
 
   // 取建立產品的值
   const handleNewProductChange = (e) => {
-    const { id, value } = e.target
+    const { name, value, id } = e.target
     setNewProduct({
       ...newProduct,
       [id]: value,
     })
+
+    // 有錯就清掉該欄位錯誤
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: '',
+      })
+    }
   }
 
   // 確認登入是否成功 checkLogin
@@ -623,6 +120,7 @@ function App() {
 
       if (!token) return
       // 帶著 token 去跟 API 要驗證
+      // eslint-disable-next-line react-hooks/immutability
       axios.defaults.headers.common['Authorization'] = token
       await axios.post(`${API_BASE}/api/user/check`)
       setIsAuth(true)
@@ -652,6 +150,7 @@ function App() {
       const { token, expired } = res.data
 
       // 存 token 到 cookie
+      // eslint-disable-next-line react-hooks/immutability
       document.cookie = `hexToken=${token}; expires=${new Date(expired)}`
 
       // 顯示 Toast
@@ -746,6 +245,17 @@ function App() {
 
   // 建立新產品
   const addNewProduct = async () => {
+    const validateErrors = validateProduct(newProduct)
+
+    if (Object.keys(validateErrors).length > 0) {
+      setErrors(validateErrors)
+      return
+    }
+
+    setErrors({}) // 清空錯誤
+
+    // 通過驗證才送 API
+
     try {
       await axios.post(
         `${API_BASE}/api/${API_PATH}/admin/product`,
@@ -778,8 +288,11 @@ function App() {
         imagesUrl: ['', '', '', '', ''],
       })
     }
-    catch {
-      toast.error('新增產品失敗', {
+    catch (error) {
+      const message
+        = error?.response?.data?.message || '新增產品失敗，請確認輸入內容'
+
+      toast.error(message, {
         position: 'top-right',
         autoClose: 1500,
       })
@@ -866,6 +379,17 @@ function App() {
 
   // 編輯產品資訊
   const updateProduct = async () => {
+    const validateErrors = validateProduct(newProduct)
+
+    if (Object.keys(validateErrors).length > 0) {
+      setErrors(validateErrors)
+      return
+    }
+
+    setErrors({}) // 清空錯誤
+
+    // 通過驗證才送 API
+
     try {
       await axios.put(
         `${API_BASE}/api/${API_PATH}/admin/product/${newProduct.id}`,
@@ -907,12 +431,48 @@ function App() {
         imagesUrl: ['', '', '', '', ''],
       })
     }
-    catch {
-      toast.error('編輯品項失敗', {
+    catch (error) {
+      const message
+        = error?.response?.data?.message || '編輯品項失敗'
+
+      toast.error(message, {
         position: 'top-right',
         autoClose: 1500,
       })
     }
+  }
+
+  // 表單驗證資訊
+  const validateProduct = (product) => {
+    const errors = {}
+
+    if (!product.title?.trim()) {
+      errors.title = '請輸入產品名稱'
+    }
+
+    if (!product.category?.trim()) {
+      errors.category = '請選擇產品分類'
+    }
+
+    if (!product.unit?.trim()) {
+      errors.unit = '請選擇產品單位'
+    }
+
+    if (product.price === '') {
+      errors.price = '請輸入產品售價'
+    }
+    else if (Number(product.price) < 0) {
+      errors.price = '售價不可為負數'
+    }
+
+    if (product.origin_price === '') {
+      errors.origin_price = '請輸入產品原價'
+    }
+    else if (Number(product.origin_price) < 0) {
+      errors.origin_price = '原價不可為負數'
+    }
+
+    return errors
   }
 
   // 確認登入，重整還會在後台
@@ -1067,6 +627,7 @@ function App() {
               newProduct={newProduct}
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
+              errors={errors}
             />
             <EditProduct
               editProductRef={editProductRef}
@@ -1076,6 +637,7 @@ function App() {
               newProduct={newProduct}
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
+              errors={errors}
             />
             <ToastContainer />
           </div>
