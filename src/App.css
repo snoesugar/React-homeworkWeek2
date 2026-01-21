@@ -31,6 +31,12 @@ img {
   max-width: 100%;
 }
 
+.preview-image-main {
+  height: 300px;
+  width: 100%;
+  object-fit: cover;
+}
+
 .primary-image {
   height: 500px;
   width: 100%;

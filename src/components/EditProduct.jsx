@@ -1,4 +1,4 @@
-const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct, handleNewProductChange, setNewProduct, errors }) => {
+const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct, handleNewProductChange, setNewProduct, errors, handleFileChange }) => {
   return (
     <div
       className="modal fade"
@@ -26,7 +26,6 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
                   <div className="invalid-feedback">{errors.title}</div>
                 )}
               </div>
-
               <div className="mb-3">
                 <label htmlFor="content" className="form-label">產品說明</label>
                 <input
@@ -136,7 +135,20 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
               </div>
               <hr />
               <div className="row">
-                <div className="col-6">
+                <div className="col-12">
+                  <div className="mb-3">
+                    <label for="formFile" className="form-label">上傳圖片</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      id="formFile"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </div>
+                <p className="text-center m-0">or</p>
+                <div className="col-12">
                   <div className="mb-3">
                     <label htmlFor="imageUrl" className="form-label">輸入主圖網址</label>
                     <input
@@ -151,7 +163,7 @@ const EditProduct = ({ editProductRef, closeEditModal, updateProduct, newProduct
                         <img
                           src={newProduct.imageUrl}
                           alt="主圖預覽"
-                          className="preview-image"
+                          className="preview-image-main rounded-3"
                         />
                       </div>
                     )}

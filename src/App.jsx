@@ -473,6 +473,20 @@ function App() {
     return errors
   }
 
+  // 檔案上傳
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // 產生本地預覽用 URL
+    const previewUrl = URL.createObjectURL(file)
+
+    setNewProduct({
+      ...newProduct,
+      imageUrl: previewUrl,
+    })
+  }
+
   // 確認登入，重整還會在後台
   useEffect(() => {
     const initAuth = async () => {
@@ -630,6 +644,7 @@ function App() {
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
               errors={errors}
+              handleFileChange={handleFileChange}
             />
             <EditProduct
               editProductRef={editProductRef}
@@ -640,6 +655,7 @@ function App() {
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
               errors={errors}
+              handleFileChange={handleFileChange}
             />
             <ToastContainer />
           </div>
