@@ -473,11 +473,6 @@ function App() {
     return errors
   }
 
-  // 先抓第一頁
-  useEffect(() => {
-    getProducts(1)
-  }, [])
-
   // 確認登入，重整還會在後台
   useEffect(() => {
     const initAuth = async () => {
