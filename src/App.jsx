@@ -410,7 +410,7 @@ function App() {
       })
 
       // 關閉編輯 modal
-      if (editProductInstance.current) editProductInstance.current.hide()
+      closeEditModal()
 
       // 重新抓資料
       getProducts()
@@ -474,19 +474,28 @@ function App() {
   }
 
   // 檔案上傳
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
+  const handleFileChange = async (e) => {
+    const url = `${API_BASE}/api/${API_PATH}/admin/upload`
+    const file = e.target.files?.[0]
+
     if (!file) return
 
-    // 產生本地預覽用 URL
-    const previewUrl = URL.createObjectURL(file)
+    try {
+      const formData = new FormData()
+      formData.append('file-to-upload', file)
 
-    setNewProduct({
-      ...newProduct,
-      imageUrl: previewUrl,
-    })
+      let res = await axios.post(url, formData)
+      const uploadedImageUrl = res.data.imageUrl
+
+      setNewProduct(pre => ({
+        ...pre,
+        imageUrl: uploadedImageUrl,
+      }))
+    }
+    catch (error) {
+      console.error('Upload error:', error)
+    }
   }
-
   // 確認登入，重整還會在後台
   useEffect(() => {
     const initAuth = async () => {

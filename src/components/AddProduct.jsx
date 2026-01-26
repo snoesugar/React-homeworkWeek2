@@ -137,13 +137,14 @@ const AddProduct = ({ modalRef, closeAddModal, addNewProduct, newProduct, handle
               <div className="row">
                 <div className="col-12">
                   <div className="mb-3">
-                    <label for="formFile" className="form-label">上傳圖片</label>
+                    <label htmlFor="fileUpload" className="form-label">上傳圖片</label>
                     <input
                       className="form-control"
                       type="file"
-                      id="formFile"
-                      accept="image/*"
-                      onChange={handleFileChange}
+                      name="fileUpload"
+                      id="fileUpload"
+                      accept=".jpg,.jpeg,.png"
+                      onChange={e => handleFileChange(e)}
                     />
                   </div>
                 </div>
