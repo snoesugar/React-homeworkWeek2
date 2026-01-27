@@ -11,7 +11,7 @@ const API_PATH = import.meta.env.VITE_API_PATH
 const ProductList = () => {
   const [products, setProducts] = useState([])
   const [pagination, setPagination] = useState({})
-  const [loading, setLoading] = useState(true) // 初始為 true
+  const [loading, setLoading] = useState(true)
 
   // 抓取產品資料
   const getProducts = useCallback(async (page = 1) => {
