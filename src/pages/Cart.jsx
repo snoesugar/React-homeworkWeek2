@@ -119,6 +119,13 @@ const Cart = () => {
     return sum + item.final_total
   }, 0)
 
+  // 計算總共省下多少錢
+  const totalSaved = cartList.reduce((sum, item) => {
+    const originTotal = item.product.origin_price * item.qty
+    const priceTotal = item.product.price * item.qty
+    return sum + (originTotal - priceTotal)
+  }, 0)
+
   // 計算購物車總數
   const totalQty = cartList.reduce((sum, item) => sum + item.qty, 0)
 
@@ -243,6 +250,15 @@ const Cart = () => {
                             {totalQty}
                             件商品
                           </span>
+                          {totalSaved > 0 && (
+                            <span className="text-secondary me-4">
+                              一共省下
+                              <span className="text-danger fw-bold mx-1">
+                                {totalSaved.toLocaleString()}
+                              </span>
+                              元
+                            </span>
+                          )}
                           <span className="fs-1 me-5">
                             NT$
                             {totalAmount.toLocaleString()}
