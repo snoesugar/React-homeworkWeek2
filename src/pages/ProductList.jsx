@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { Pagination } from '../components/Components'
+import { Link } from 'react-router'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -118,7 +119,7 @@ const ProductList = () => {
                           </div>
                         </div>
                         <div className="d-flex">
-                          <button type="button" className="btn btn-primary w-50 rounded-0 py-3">查看更多</button>
+                          <Link type="button" to={`/product/${product.id}`} className="btn btn-primary w-50 rounded-0 py-3">查看更多</Link>
                           <button type="button" className="btn btn-danger w-50 rounded-0 py-3" onClick={() => addToCart(product)}>放入購物車</button>
                         </div>
                       </div>

@@ -4,6 +4,7 @@ import App from '../App'
 import Home from '../pages/Home'
 import ProductList from '../pages/ProductList'
 import Cart from '../pages/Cart'
+import Product from '../pages/Product'
 
 const router = createHashRouter([
   {
@@ -19,11 +20,15 @@ const router = createHashRouter([
         element: <ProductList />,
       },
       {
+        path: 'product/:id',
+        element: <Product />,
+      },
+      {
         path: 'login',
         element: <App />,
       },
       {
-        path: 'Cart',
+        path: 'cart',
         element: <Cart />,
       },
     ],
