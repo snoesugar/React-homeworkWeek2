@@ -32,6 +32,7 @@ export default defineConfig([
       'eqeqeq': ['error'],
       '@stylistic/indent': ['error', 2], // 程式碼都會是2的倍數縮排
       '@stylistic/comma-spacing': ['warn'],
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

@@ -45,9 +45,7 @@ const TempProduct = ({ tempProduct, modalRef, closeModal }) => {
                   <del>{tempProduct.origin_price}</del>
                 </p>
                 元 /
-                {' '}
                 {tempProduct.price}
-                {' '}
                 元
               </div>
             </div>

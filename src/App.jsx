@@ -3,12 +3,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import { Modal, Collapse } from 'bootstrap'
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
-
-import ProductList from './components/ProductList' // 產品元件
-import TempProduct from './components/TempProduct' // 查看細節的 Modal元件
-import AddProduct from './components/AddProduct' // 新增的 Modal元件
-import EditProduct from './components/EditProduct' // 編輯的 Modal元件
-import Pagination from './components/Pagination' // 分頁元件
+import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from './components/Components'
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE
