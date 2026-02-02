@@ -4,6 +4,7 @@ import { Modal, Collapse } from 'bootstrap'
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
 import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from './components/Components'
+import { useForm } from 'react-hook-form'
 import './assets/scss/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE
@@ -12,10 +13,6 @@ const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
 function App() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  })
   const [newProduct, setNewProduct] = useState({
     title: '',
     category: '',
@@ -33,7 +30,7 @@ function App() {
   const [tempProduct, setTempProduct] = useState(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [error, setErrors] = useState({})
   const [pagination, setPagination] = useState({})
   const productModalRef = useRef(null)
   const addModalRef = useRef(null)
@@ -41,6 +38,14 @@ function App() {
   const productModalInstance = useRef(null)
   const addModalInstance = useRef(null)
   const editProductInstance = useRef(null)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: 'onTouched',
+  })
 
   /* ---------- 查看細節 ---------- */
   const openModal = item => setTempProduct(item)
@@ -82,15 +87,6 @@ function App() {
     setErrors({}) // 關閉 Modal 時清空錯誤
   }
 
-  // 取帳號密碼input裡面的值
-  const handleInputChange = (e) => {
-    const { id, value } = e.target
-    setFormData({
-      ...formData,
-      [id]: value,
-    })
-  }
-
   // 取建立產品的值
   const handleNewProductChange = (e) => {
     const { value, id } = e.target
@@ -100,9 +96,9 @@ function App() {
     })
 
     // 有錯就清掉該欄位錯誤
-    if (errors[id]) {
+    if (error[id]) {
       setErrors({
-        ...errors,
+        ...error,
         [id]: '',
       })
     }
@@ -134,15 +130,13 @@ function App() {
   }
 
   // 登入送出：取得 token
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
+  const handleSubmitToken = async (data) => {
     try {
       const res = await axios.post(
         `${API_BASE}/admin/signin`,
         {
-          username: formData.username,
-          password: formData.password,
+          username: data.username,
+          password: data.password,
         },
       )
 
@@ -437,35 +431,35 @@ function App() {
 
   // 表單驗證資訊
   const validateProduct = (product) => {
-    const errors = {}
+    const error = {}
 
     if (!product.title?.trim()) {
-      errors.title = '請輸入產品名稱'
+      error.title = '請輸入產品名稱'
     }
 
     if (!product.category?.trim()) {
-      errors.category = '請選擇產品分類'
+      error.category = '請選擇產品分類'
     }
 
     if (!product.unit?.trim()) {
-      errors.unit = '請選擇產品單位'
+      error.unit = '請選擇產品單位'
     }
 
     if (product.price === '') {
-      errors.price = '請輸入產品售價'
+      error.price = '請輸入產品售價'
     }
     else if (Number(product.price) < 0) {
-      errors.price = '售價不可為負數'
+      error.price = '售價不可為負數'
     }
 
     if (product.origin_price === '') {
-      errors.origin_price = '請輸入產品原價'
+      error.origin_price = '請輸入產品原價'
     }
     else if (Number(product.origin_price) < 0) {
-      errors.origin_price = '原價不可為負數'
+      error.origin_price = '原價不可為負數'
     }
 
-    return errors
+    return error
   }
 
   // 檔案上傳
@@ -647,7 +641,7 @@ function App() {
               newProduct={newProduct}
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
-              errors={errors}
+              errors={error}
               handleFileChange={handleFileChange}
             />
             <EditProduct
@@ -658,7 +652,7 @@ function App() {
               newProduct={newProduct}
               handleNewProductChange={handleNewProductChange}
               setNewProduct={setNewProduct}
-              errors={errors}
+              errors={error}
               handleFileChange={handleFileChange}
             />
             <ToastContainer />
@@ -669,31 +663,46 @@ function App() {
             <div className="row justify-content-center">
               <h1 className="h3 mb-3 font-weight-normal text-primary">請先登入</h1>
               <div className="col-8">
-                <form id="form" className="form-signin" onSubmit={handleSubmit}>
+                <form id="form" className="form-signin" onSubmit={handleSubmit(handleSubmitToken)}>
                   <div className="form-floating mb-3">
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${errors.username ? 'is-invalid' : ''}`}
                       id="username"
                       placeholder="name@example.com"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      required
+                      {...register('username', {
+                        required: {
+                          value: true,
+                          message: '請填寫帳號',
+                        },
+                        pattern: {
+                          value: /^\S+@\S+$/i,
+                          message: '帳號格式不正確',
+                        },
+                      })}
                       autoFocus
                     />
                     <label htmlFor="username">帳號</label>
+                    {errors.username && (
+                      <div className="text-start invalid-feedback">
+                        {errors.username.message}
+                      </div>
+                    )}
                   </div>
                   <div className="form-floating">
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                       id="password"
                       placeholder="Password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
+                      {...register('password', { required: '請填寫密碼' })}
                     />
                     <label htmlFor="password">密碼</label>
+                    {errors.password && (
+                      <div className="text-start invalid-feedback">
+                        {errors.password.message}
+                      </div>
+                    )}
                   </div>
                   <button
                     className="btn btn-lg btn-primary w-100 mt-3"
