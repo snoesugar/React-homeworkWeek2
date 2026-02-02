@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import axios from 'axios'
+import { useNavigate } from 'react-router'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -8,6 +9,7 @@ const API_PATH = import.meta.env.VITE_API_PATH
 const Cart = () => {
   const [cartList, setCartList] = useState([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   // 取得購物車
   const getCart = async (showLoading = false) => {
@@ -138,7 +140,6 @@ const Cart = () => {
       })
       return
     }
-
     toast.success('前往結帳流程', {
       position: 'top-right',
       autoClose: 1500, // 1.5 秒自動消失
@@ -147,6 +148,10 @@ const Cart = () => {
       pauseOnHover: true,
       draggable: true,
     })
+    const timer = setTimeout(() => {
+      navigate('/checkout')
+    }, 2000)
+    return () => clearTimeout(timer)
   }
 
   useEffect(() => {
