@@ -4,7 +4,7 @@ import { Modal, Collapse } from 'bootstrap'
 import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
 import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from './components/Components'
-import './App.css'
+import './assets/scss/App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 

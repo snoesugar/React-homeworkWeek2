@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 const Home = () => {
   return (
     <>
-      <div className="position-relative">
+      <div className="container-lg position-relative">
         <img
           src="https://media.istockphoto.com/id/860627102/photo/collage-from-different-pictures-of-tasty-food-copy-space-for-your-text.jpg?s=1024x1024&w=is&k=20&c=Jq_OboVSwXlZWjdWFoNIRplm1CblorD-rfaKpzxBud8="
           alt="index"

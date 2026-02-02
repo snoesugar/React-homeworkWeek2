@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -13,6 +13,7 @@ const Product = () => {
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState('')
   const [images, setImages] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -68,6 +69,17 @@ const Product = () => {
 
   return (
     <div className="container mt-5">
+      <div className="text-start mb-3">
+        <button
+          className="btn btn-outline-primary"
+          type="button"
+          onClick={() => {
+            navigate(-1)
+          }}
+        >
+          返回
+        </button>
+      </div>
       <div className="row bg-white p-4 rounded shadow-sm">
         {/* 左側圖片區 */}
         <div className="col-6">
