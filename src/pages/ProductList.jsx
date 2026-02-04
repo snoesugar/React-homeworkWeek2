@@ -18,15 +18,8 @@ const ProductList = () => {
   const getProducts = useCallback(async (page = 1) => {
     setLoading(true) // 開始抓資料
     try {
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('hexToken='))
-        ?.split('=')[1]
-
-      axios.defaults.headers.common.Authorization = token
-
       const res = await axios.get(
-        `${API_BASE}/api/${API_PATH}/admin/products?page=${page}`,
+        `${API_BASE}/api/${API_PATH}/products?page=${page}`,
       )
 
       setProducts(res.data.products)
