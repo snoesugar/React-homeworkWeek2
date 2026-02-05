@@ -4,6 +4,7 @@ import Navbar from './Navbar'
 import Pagination from './Pagination'
 import ProductList from './ProductList'
 import TempProduct from './TempProduct'
+import Spinner from './Spinner'
 
 export {
   AddProduct,
@@ -12,4 +13,5 @@ export {
   Pagination,
   ProductList,
   TempProduct,
+  Spinner,
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import axios from 'axios'
 import { useNavigate } from 'react-router'
+import { Spinner } from '../components/Components'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -163,10 +164,8 @@ const Cart = () => {
       {
         loading
           ? (
-            <div className="text-center mt-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+            <div className="d-flex justify-content-center align-items-center text-center mt-5">
+              <Spinner />
             </div>
           )
           : (

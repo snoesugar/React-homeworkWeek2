@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
-import { Pagination } from '../components/Components'
-import { Link } from 'react-router'
+import { Pagination, Spinner } from '../components/Components'
+import { Link } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -76,10 +76,8 @@ const ProductList = () => {
               <div className="col-4" key={i}>
                 <div className="card shadow-lg border-0 h-100 opacity-50">
                   <div className="bg-gray-300 preview-image-main"></div>
-                  <div className="card-body">
-                    <div className="spinner-border text-primary mb-4" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
+                  <div className="card-body d-flex justify-content-center align-items-center">
+                    <Spinner />
                     <div className="bg-gray-200 mb-5"></div>
                   </div>
                 </div>

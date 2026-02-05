@@ -1,5 +1,10 @@
-import { useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import axios from 'axios'
+import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify'
+
+const API_BASE = import.meta.env.VITE_API_BASE
+const API_PATH = import.meta.env.VITE_API_PATH
 
 // 收貨人 input 元件
 const UserInput = ({ register, errors, id, labelText, type, rules }) => {
@@ -30,30 +35,50 @@ const UserInput = ({ register, errors, id, labelText, type, rules }) => {
 }
 
 const CheckOut = () => {
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
   } = useForm({
     mode: 'onTouched',
   })
 
-  const onSubmit = (data) => {
-    console.log(data)
+  const onSubmit = async (formData) => {
+    const cartRes = await axios.get(`${API_BASE}/api/${API_PATH}/cart`)
+
+    if (!cartRes.data.data.carts.length) {
+      toast.error('購物車是空的，無法送出訂單')
+      return
+    }
+    try {
+    // 1️⃣ 建立訂單
+      await axios.post(`${API_BASE}/api/${API_PATH}/order`, {
+        data: {
+          user: {
+            name: formData.username,
+            email: formData.email,
+            tel: formData.tel,
+            address: formData.address,
+          },
+          message: formData.comment || '',
+        },
+      })
+
+      // 3️⃣ 成功提示
+      toast.success('訂單已送出，購物車已清空')
+
+      // 4️⃣ 導頁（依需求）
+      navigate('/success')
+    }
+    catch (err) {
+      toast.error(err.response?.data?.message || '送出訂單失敗')
+    }
   }
-
-  const watchForm = useWatch({
-    control,
-  })
-
-  useEffect(() => {
-    console.log(watchForm)
-  }, [watchForm])
 
   return (
     <div className="container-lg mt-5">
-      <form className="bg-white p-4 rounded shadow-sm needs-validation" onSubmit={handleSubmit(onSubmit)}>
+      <form className="bg-white p-4 rounded-4 shadow-sm needs-validation" onSubmit={handleSubmit(onSubmit)}>
         <h2 className="mb-4">收貨人資訊</h2>
 
         {/* 姓名 */}
@@ -99,8 +124,8 @@ const CheckOut = () => {
             message: '電話是必填的',
           },
           minLength: {
-            value: 6,
-            message: '電話不少於 6 碼',
+            value: 8,
+            message: '電話不少於 8 碼',
           },
           maxLength: {
             value: 12,
@@ -144,12 +169,21 @@ const CheckOut = () => {
         {/* 送出 */}
         <div className="row align-items-center justify-content-center">
           <div className="col-7">
+            <button
+              className="btn btn-outline-primary me-5"
+              type="button"
+              onClick={() => {
+                navigate(-1)
+              }}
+            >
+              返回
+            </button>
             <button className="btn btn-primary" type="submit">
               送出
             </button>
           </div>
         </div>
-
+        <ToastContainer />
       </form>
     </div>
   )

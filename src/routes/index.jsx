@@ -7,6 +7,7 @@ import Cart from '../pages/Cart'
 import Product from '../pages/Product'
 import NotFound from '../pages/NotFound'
 import CheckOut from '../pages/CheckOut'
+import Success from '../pages/Success'
 
 const router = createHashRouter([
   {
@@ -36,6 +37,10 @@ const router = createHashRouter([
       {
         path: 'checkout',
         element: <CheckOut />,
+      },
+      {
+        path: 'success',
+        element: <Success />,
       },
     ],
   },
