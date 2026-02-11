@@ -4,11 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import { Modal, Collapse } from 'bootstrap'
 import 'react-toastify/dist/ReactToastify.css'
-import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from '../../components/Components'
+import { ProductList, TempProduct, AddProduct, EditProduct, Pagination, Spinner } from '../../components/Components'
 
 const API_BASE = import.meta.env.VITE_API_BASE
-
-// 請自行替換 API_PATH
 const API_PATH = import.meta.env.VITE_API_PATH
 
 function AdminProducts() {
@@ -30,6 +28,7 @@ function AdminProducts() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [error, setErrors] = useState({})
   const [pagination, setPagination] = useState({})
+  const [loading, setLoading] = useState(true)
   const productModalRef = useRef(null)
   const addModalRef = useRef(null)
   const editProductRef = useRef(null)
@@ -97,6 +96,7 @@ function AdminProducts() {
 
   // 先宣告工具 抓取產品資料 getProducts
   const getProducts = async (page = 1) => {
+    setLoading(true)
     try {
       const res = await axios.get(
         `${API_BASE}/api/${API_PATH}/admin/products?page=${page}`,
@@ -106,10 +106,13 @@ function AdminProducts() {
       setPagination(res.data.pagination) // 分頁資訊
     }
     catch {
-      toast.error('取得產品資料失敗，請稍後再試', {
+      toast.error('取得訂單資料失敗，請稍後再試', {
         position: 'top-right',
         autoClose: 1500,
       })
+    }
+    finally {
+      setLoading(false) // 完成抓取
     }
   }
 
@@ -118,7 +121,6 @@ function AdminProducts() {
     try {
       await axios.post(`${API_BASE}/logout`)
       delete axios.defaults.headers.common['Authorization']
-      setProducts([])
       // 顯示 Toast
       toast.success('登出成功', {
         position: 'top-right',
@@ -127,9 +129,8 @@ function AdminProducts() {
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
+        onClose: () => navigate('/login'), // toast 消失後再跳轉
       })
-      // 跳轉到後台產品頁
-      navigate('/login')
     }
     catch {
       toast.error('登出失敗', {
@@ -200,9 +201,10 @@ function AdminProducts() {
     if (!window.confirm('確定要刪除所有品項嗎？')) return
 
     try {
+      setLoading(true)
       // 1️⃣ 先取得目前所有產品
       const res = await axios.get(
-        `${API_BASE}/api/${API_PATH}/admin/products`,
+        `${API_BASE}/api/${API_PATH}/admin/products?page=1&per_page=1000`,
       )
 
       const products = res.data.products
@@ -241,6 +243,9 @@ function AdminProducts() {
         position: 'top-right',
         autoClose: 1500,
       })
+    }
+    finally {
+      setLoading(false)
     }
   }
 
@@ -404,7 +409,10 @@ function AdminProducts() {
           .find(row => row.startsWith('hexToken='))
           ?.split('=')[1]
 
-        if (!token) return
+        if (!token) {
+          setLoading(false)
+          return
+        }
 
         // 設定 axios header
         axios.defaults.headers.common['Authorization'] = token
@@ -413,11 +421,14 @@ function AdminProducts() {
         await axios.post(`${API_BASE}/api/user/check`)
 
         // 驗證成功
-        getProducts()
+        await getProducts()
       }
       catch {
         // token 過期或失效
         delete axios.defaults.headers.common['Authorization']
+      }
+      finally {
+        setLoading(false)
       }
     }
 
@@ -495,72 +506,81 @@ function AdminProducts() {
 
   return (
     <>
-      <div className="container">
-        <div className="row mt-5 bg-white form-signin">
-          <div className="col">
-            <div className="text-end mb-3">
-              <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
+      <ToastContainer />
+      {
+        loading
+          ? (
+            <div className="d-flex justify-content-center align-items-center text-center mt-5">
+              <Spinner />
             </div>
-            <h2>產品列表</h2>
-            <div className="text-end mb-3">
-              <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
-              <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
-            </div>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>產品名稱</th>
-                  <th>原價</th>
-                  <th>售價</th>
-                  <th>是否啟用</th>
-                  <th>查看細節</th>
-                  <th>編輯</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ProductList
-                  products={products}
-                  openModal={openModal}
-                  deleteProduct={deleteProduct}
-                  setNewProduct={setNewProduct}
-                  openEditModal={openEditModal}
+          )
+          : (
+            <div className="container">
+              <div className="row mt-5 bg-white form-signin">
+                <div className="col">
+                  <div className="text-end mb-3">
+                    <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
+                  </div>
+                  <h2>產品列表</h2>
+                  <div className="text-end mb-3">
+                    <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
+                    <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
+                  </div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>產品名稱</th>
+                        <th>原價</th>
+                        <th>售價</th>
+                        <th>是否啟用</th>
+                        <th>查看細節</th>
+                        <th>編輯</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ProductList
+                        products={products}
+                        openModal={openModal}
+                        deleteProduct={deleteProduct}
+                        setNewProduct={setNewProduct}
+                        openEditModal={openEditModal}
+                      />
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  pagination={pagination}
+                  changePage={getProducts}
                 />
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            pagination={pagination}
-            changePage={getProducts}
-          />
-        </div>
-        <TempProduct
-          tempProduct={tempProduct}
-          modalRef={productModalRef}
-          closeModal={closeModal}
-        />
-        <AddProduct
-          modalRef={addModalRef}
-          closeAddModal={closeAddModal}
-          addNewProduct={addNewProduct}
-          newProduct={newProduct}
-          handleNewProductChange={handleNewProductChange}
-          setNewProduct={setNewProduct}
-          errors={error}
-          handleFileChange={handleFileChange}
-        />
-        <EditProduct
-          editProductRef={editProductRef}
-          modalRef={editProductRef}
-          closeEditModal={closeEditModal}
-          updateProduct={updateProduct}
-          newProduct={newProduct}
-          handleNewProductChange={handleNewProductChange}
-          setNewProduct={setNewProduct}
-          errors={error}
-          handleFileChange={handleFileChange}
-        />
-        <ToastContainer />
-      </div>
+              </div>
+              <TempProduct
+                tempProduct={tempProduct}
+                modalRef={productModalRef}
+                closeModal={closeModal}
+              />
+              <AddProduct
+                modalRef={addModalRef}
+                closeAddModal={closeAddModal}
+                addNewProduct={addNewProduct}
+                newProduct={newProduct}
+                handleNewProductChange={handleNewProductChange}
+                setNewProduct={setNewProduct}
+                errors={error}
+                handleFileChange={handleFileChange}
+              />
+              <EditProduct
+                editProductRef={editProductRef}
+                closeEditModal={closeEditModal}
+                updateProduct={updateProduct}
+                newProduct={newProduct}
+                handleNewProductChange={handleNewProductChange}
+                setNewProduct={setNewProduct}
+                errors={error}
+                handleFileChange={handleFileChange}
+              />
+            </div>
+          )
+      }
     </>
   )
 }

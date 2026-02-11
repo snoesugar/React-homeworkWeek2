@@ -6,9 +6,6 @@ import { ToastContainer, toast } from 'react-toastify'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
-// 請自行替換 API_PATH
-const API_PATH = import.meta.env.VITE_API_PATH
-
 const Login = () => {
   const navigate = useNavigate()
   const {
