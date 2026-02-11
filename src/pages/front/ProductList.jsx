@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
-import { Pagination, Spinner } from '../components/Components'
+import { Pagination, Spinner } from '../../components/Components'
 import { Link } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_BASE

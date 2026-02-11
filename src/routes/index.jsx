@@ -1,18 +1,22 @@
 import { createHashRouter } from 'react-router-dom'
-import MainLayout from '../pages/MainLayout'
-import App from '../App'
-import Home from '../pages/Home'
-import ProductList from '../pages/ProductList'
-import Cart from '../pages/Cart'
-import Product from '../pages/Product'
-import NotFound from '../pages/NotFound'
-import CheckOut from '../pages/CheckOut'
-import Success from '../pages/Success'
+import FrontLayout from '../layout/FrontLayout'
+import AdminLayout from '../layout/AdminLayout'
+import Home from '../pages/front/Home'
+import ProductList from '../pages/front/ProductList'
+import Cart from '../pages/front/Cart'
+import Product from '../pages/front/Product'
+import NotFound from '../pages/front/NotFound'
+import CheckOut from '../pages/front/CheckOut'
+import Success from '../pages/front/Success'
+import AdminProducts from '../pages/admin/AdminProducts'
+import AdminOrders from '../pages/admin/AdminOrders'
+import Login from '../pages/Login'
 
 const router = createHashRouter([
+  // 前台路由
   {
     path: '/',
-    element: <MainLayout />,
+    element: <FrontLayout />,
     children: [
       {
         index: true,
@@ -27,10 +31,6 @@ const router = createHashRouter([
         element: <Product />,
       },
       {
-        path: 'login',
-        element: <App />,
-      },
-      {
         path: 'cart',
         element: <Cart />,
       },
@@ -41,6 +41,25 @@ const router = createHashRouter([
       {
         path: 'success',
         element: <Success />,
+      },
+      {
+        path: 'login',
+        element: <Login />,
+      },
+    ],
+  },
+  // 後台路由
+  {
+    path: 'admin',
+    element: <AdminLayout />,
+    children: [
+      {
+        path: 'product',
+        element: <AdminProducts />,
+      },
+      {
+        path: 'order',
+        element: <AdminOrders />,
       },
     ],
   },

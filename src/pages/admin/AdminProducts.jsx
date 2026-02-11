@@ -1,18 +1,17 @@
+import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import { Modal, Collapse } from 'bootstrap'
-import axios from 'axios'
 import 'react-toastify/dist/ReactToastify.css'
-import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from './components/Components'
-import { useForm } from 'react-hook-form'
-import './assets/scss/App.css'
+import { ProductList, TempProduct, AddProduct, EditProduct, Pagination } from '../../components/Components'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
 // 請自行替換 API_PATH
 const API_PATH = import.meta.env.VITE_API_PATH
 
-function App() {
+function AdminProducts() {
   const [newProduct, setNewProduct] = useState({
     title: '',
     category: '',
@@ -25,7 +24,6 @@ function App() {
     imageUrl: '',
     imagesUrl: ['', '', '', '', ''],
   })
-  const [isAuth, setIsAuth] = useState(false)
   const [products, setProducts] = useState([])
   const [tempProduct, setTempProduct] = useState(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -38,14 +36,7 @@ function App() {
   const productModalInstance = useRef(null)
   const addModalInstance = useRef(null)
   const editProductInstance = useRef(null)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    mode: 'onTouched',
-  })
+  const navigate = useNavigate()
 
   /* ---------- 查看細節 ---------- */
   const openModal = item => setTempProduct(item)
@@ -104,68 +95,6 @@ function App() {
     }
   }
 
-  // 確認登入是否成功 checkLogin
-  const authorization = async () => {
-    try {
-      // 從 cookie 裡「把 token 拿出來」
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('hexToken='))
-        ?.split('=')[1]
-
-      if (!token) return
-      // 帶著 token 去跟 API 要驗證
-      // eslint-disable-next-line react-hooks/immutability
-      axios.defaults.headers.common['Authorization'] = token
-      await axios.post(`${API_BASE}/api/user/check`)
-      setIsAuth(true)
-      getProducts()
-    }
-    catch {
-      toast.error('驗證失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
-    }
-  }
-
-  // 登入送出：取得 token
-  const handleSubmitToken = async (data) => {
-    try {
-      const res = await axios.post(
-        `${API_BASE}/admin/signin`,
-        {
-          username: data.username,
-          password: data.password,
-        },
-      )
-
-      const { token, expired } = res.data
-
-      // 存 token 到 cookie
-      // eslint-disable-next-line react-hooks/immutability
-      document.cookie = `hexToken=${token}; expires=${new Date(expired)}`
-
-      // 顯示 Toast
-      toast.success('登入成功，正在跳轉頁面...', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
-
-      await authorization()
-    }
-    catch {
-      toast.error('登入失敗，請確認帳密', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
-    }
-  }
-
   // 先宣告工具 抓取產品資料 getProducts
   const getProducts = async (page = 1) => {
     try {
@@ -184,32 +113,10 @@ function App() {
     }
   }
 
-  // 確認是否登入
-  const checkLogin = async () => {
-    try {
-      await axios.post(`${API_BASE}/api/user/check`)
-      toast.success('已登入', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
-    }
-    catch {
-      toast.error('尚未登入', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
-    }
-  }
-
   // 登出
   const checkLogout = async () => {
     try {
       await axios.post(`${API_BASE}/logout`)
-      setIsAuth(false)
       delete axios.defaults.headers.common['Authorization']
       setProducts([])
       // 顯示 Toast
@@ -221,6 +128,8 @@ function App() {
         pauseOnHover: true,
         draggable: true,
       })
+      // 跳轉到後台產品頁
+      navigate('/login')
     }
     catch {
       toast.error('登出失敗', {
@@ -504,12 +413,10 @@ function App() {
         await axios.post(`${API_BASE}/api/user/check`)
 
         // 驗證成功
-        setIsAuth(true)
         getProducts()
       }
       catch {
         // token 過期或失效
-        setIsAuth(false)
         delete axios.defaults.headers.common['Authorization']
       }
     }
@@ -588,137 +495,74 @@ function App() {
 
   return (
     <>
-      {isAuth
-        ? (
-          <div className="container">
-            <div className="row mt-5 bg-white form-signin">
-              <div className="col">
-                <div className="text-end mb-3">
-                  <button type="button" className="btn btn-outline-success me-3" onClick={checkLogin}>確認是否登入</button>
-                  <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
-                </div>
-                <h2>產品列表</h2>
-                <div className="text-end mb-3">
-                  <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
-                  <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
-                </div>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>產品名稱</th>
-                      <th>原價</th>
-                      <th>售價</th>
-                      <th>是否啟用</th>
-                      <th>查看細節</th>
-                      <th>編輯</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <ProductList
-                      products={products}
-                      openModal={openModal}
-                      deleteProduct={deleteProduct}
-                      setNewProduct={setNewProduct}
-                      openEditModal={openEditModal}
-                    />
-                  </tbody>
-                </table>
-              </div>
-              <Pagination
-                pagination={pagination}
-                changePage={getProducts}
-              />
+      <div className="container">
+        <div className="row mt-5 bg-white form-signin">
+          <div className="col">
+            <div className="text-end mb-3">
+              <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
             </div>
-            <TempProduct
-              tempProduct={tempProduct}
-              modalRef={productModalRef}
-              closeModal={closeModal}
-            />
-            <AddProduct
-              modalRef={addModalRef}
-              closeAddModal={closeAddModal}
-              addNewProduct={addNewProduct}
-              newProduct={newProduct}
-              handleNewProductChange={handleNewProductChange}
-              setNewProduct={setNewProduct}
-              errors={error}
-              handleFileChange={handleFileChange}
-            />
-            <EditProduct
-              editProductRef={editProductRef}
-              modalRef={editProductRef}
-              closeEditModal={closeEditModal}
-              updateProduct={updateProduct}
-              newProduct={newProduct}
-              handleNewProductChange={handleNewProductChange}
-              setNewProduct={setNewProduct}
-              errors={error}
-              handleFileChange={handleFileChange}
-            />
-            <ToastContainer />
-          </div>
-        )
-        : (
-          <div className="container login">
-            <div className="row justify-content-center">
-              <h1 className="h3 mb-3 font-weight-normal text-primary">請先登入</h1>
-              <div className="col-8">
-                <form id="form" className="form-signin" onSubmit={handleSubmit(handleSubmitToken)}>
-                  <div className="form-floating mb-3">
-                    <input
-                      type="email"
-                      className={`form-control ${errors.username ? 'is-invalid' : ''}`}
-                      id="username"
-                      placeholder="name@example.com"
-                      {...register('username', {
-                        required: {
-                          value: true,
-                          message: '請填寫帳號',
-                        },
-                        pattern: {
-                          value: /^\S+@\S+$/i,
-                          message: '帳號格式不正確',
-                        },
-                      })}
-                      autoFocus
-                    />
-                    <label htmlFor="username">帳號</label>
-                    {errors.username && (
-                      <div className="text-start invalid-feedback">
-                        {errors.username.message}
-                      </div>
-                    )}
-                  </div>
-                  <div className="form-floating">
-                    <input
-                      type="password"
-                      className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                      id="password"
-                      placeholder="Password"
-                      {...register('password', { required: '請填寫密碼' })}
-                    />
-                    <label htmlFor="password">密碼</label>
-                    {errors.password && (
-                      <div className="text-start invalid-feedback">
-                        {errors.password.message}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    className="btn btn-lg btn-primary w-100 mt-3"
-                    type="submit"
-                  >
-                    登入
-                  </button>
-                </form>
-              </div>
+            <h2>產品列表</h2>
+            <div className="text-end mb-3">
+              <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
+              <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
             </div>
-            <p className="mt-5 mb-3 text-muted">&copy; 2024~∞ - 六角學院</p>
-            <ToastContainer />
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>產品名稱</th>
+                  <th>原價</th>
+                  <th>售價</th>
+                  <th>是否啟用</th>
+                  <th>查看細節</th>
+                  <th>編輯</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ProductList
+                  products={products}
+                  openModal={openModal}
+                  deleteProduct={deleteProduct}
+                  setNewProduct={setNewProduct}
+                  openEditModal={openEditModal}
+                />
+              </tbody>
+            </table>
           </div>
-        )}
+          <Pagination
+            pagination={pagination}
+            changePage={getProducts}
+          />
+        </div>
+        <TempProduct
+          tempProduct={tempProduct}
+          modalRef={productModalRef}
+          closeModal={closeModal}
+        />
+        <AddProduct
+          modalRef={addModalRef}
+          closeAddModal={closeAddModal}
+          addNewProduct={addNewProduct}
+          newProduct={newProduct}
+          handleNewProductChange={handleNewProductChange}
+          setNewProduct={setNewProduct}
+          errors={error}
+          handleFileChange={handleFileChange}
+        />
+        <EditProduct
+          editProductRef={editProductRef}
+          modalRef={editProductRef}
+          closeEditModal={closeEditModal}
+          updateProduct={updateProduct}
+          newProduct={newProduct}
+          handleNewProductChange={handleNewProductChange}
+          setNewProduct={setNewProduct}
+          errors={error}
+          handleFileChange={handleFileChange}
+        />
+        <ToastContainer />
+      </div>
     </>
   )
 }
 
-export default App
+export default AdminProducts

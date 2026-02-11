@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import axios from 'axios'
 import { useNavigate } from 'react-router'
-import { Spinner } from '../components/Components'
+import { Spinner } from '../../components/Components'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
