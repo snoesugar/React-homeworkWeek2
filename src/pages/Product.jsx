@@ -13,6 +13,7 @@ const Product = () => {
   const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState('')
   const [images, setImages] = useState([])
+  const [addingId, setAddingId] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,8 +41,9 @@ const Product = () => {
   }, [id])
 
   const addToCart = async (qty = 1) => {
-    if (!product) return
+    if (addingId === product.id) return
     try {
+      setAddingId(product.id)
       await axios.post(`${API_BASE}/api/${API_PATH}/cart`, {
         data: {
           product_id: product.id,
@@ -52,6 +54,9 @@ const Product = () => {
     }
     catch (err) {
       toast.error(err.response?.data?.message || '加入購物車失敗')
+    }
+    finally {
+      setAddingId(null) // 一定要還原
     }
   }
 
@@ -134,8 +139,8 @@ const Product = () => {
               {product.unit}
             </p>
           </div>
-          <button className="btn btn-outline-primary btn-lg w-100 mt-3" onClick={() => addToCart()}>
-            加入購物車
+          <button className="btn btn-outline-primary btn-lg w-100 mt-3" disabled={addingId === product.id} onClick={() => addToCart()}>
+            {addingId === product.id ? '加入中...' : '加入購物車'}
           </button>
         </div>
       </div>

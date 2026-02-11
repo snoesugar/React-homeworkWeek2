@@ -10,6 +10,7 @@ const API_PATH = import.meta.env.VITE_API_PATH
 const Cart = () => {
   const [cartList, setCartList] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingItem, setLoadingItem] = useState(null)
   const navigate = useNavigate()
 
   // 取得購物車
@@ -34,9 +35,11 @@ const Cart = () => {
 
   // 修改商品數量
   const updateCartQty = async (cartId, productId, qty) => {
-    if (qty < 1) return
+    if (qty < 1 || loadingItem === cartId) return
 
     try {
+      setLoadingItem(cartId)
+
       await axios.put(
         `${API_BASE}/api/${API_PATH}/cart/${cartId}`,
         {
@@ -46,13 +49,17 @@ const Cart = () => {
           },
         },
       )
-      getCart()
+
+      await getCart()
     }
     catch {
       toast.error('更新數量失敗', {
         position: 'top-right',
         autoClose: 1500,
       })
+    }
+    finally {
+      setLoadingItem(null)
     }
   }
 
@@ -172,7 +179,7 @@ const Cart = () => {
             <>
               <div className="row mt-5 bg-white form-signin">
                 <div className="text-end mb-3">
-                  <button type="button" className="btn btn-outline-danger me-3" onClick={delAllProducts}>清空購物車</button>
+                  <button type="button" className="btn btn-outline-danger me-3" onClick={delAllProducts} disabled={cartList.length === 0}>清空購物車</button>
                 </div>
                 <table className="table">
                   <thead>
@@ -215,6 +222,7 @@ const Cart = () => {
                               <div className="btn-group">
                                 <button
                                   className="btn btn-outline-secondary"
+                                  disabled={loadingItem === item.id}
                                   onClick={() => updateCartQty(item.id, item.product.id, item.qty - 1)}
                                 >
                                   −
@@ -222,6 +230,7 @@ const Cart = () => {
                                 <span className="px-3 d-flex align-items-center">{item.qty}</span>
                                 <button
                                   className="btn btn-outline-secondary"
+                                  disabled={loadingItem === item.id}
                                   onClick={() => updateCartQty(item.id, item.product.id, item.qty + 1)}
                                 >
                                   +

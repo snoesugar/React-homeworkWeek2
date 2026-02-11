@@ -13,6 +13,7 @@ const ProductList = () => {
   const [products, setProducts] = useState([])
   const [pagination, setPagination] = useState({})
   const [loading, setLoading] = useState(true)
+  const [addingId, setAddingId] = useState(null)
 
   // 抓取產品資料
   const getProducts = useCallback(async (page = 1) => {
@@ -37,7 +38,10 @@ const ProductList = () => {
   }, [])
   // 加入購物車
   const addToCart = async (product, qty = 1) => {
+    if (addingId === product.id) return
     try {
+      setAddingId(product.id)
+
       await axios.post(
         `${API_BASE}/api/${API_PATH}/cart`,
         {
@@ -60,6 +64,9 @@ const ProductList = () => {
     }
     catch (error) {
       toast.error(error.response?.data?.message || '加入購物車失敗')
+    }
+    finally {
+      setAddingId(null) // 一定要還原
     }
   }
 
@@ -111,7 +118,9 @@ const ProductList = () => {
                         </div>
                         <div className="d-flex">
                           <Link type="button" to={`/product/${product.id}`} className="btn btn-primary w-50 rounded-0 py-3">查看更多</Link>
-                          <button type="button" className="btn btn-danger w-50 rounded-0 py-3" onClick={() => addToCart(product)}>放入購物車</button>
+                          <button type="button" className="btn btn-danger w-50 rounded-0 py-3" disabled={addingId === product.id} onClick={() => addToCart(product)}>
+                            {addingId === product.id ? '加入中...' : '加入購物車'}
+                          </button>
                         </div>
                       </div>
                     </div>
