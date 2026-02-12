@@ -143,6 +143,7 @@ const Cart = () => {
 
   useEffect(() => {
     getCart(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -156,118 +157,122 @@ const Cart = () => {
           )
           : (
             <>
-              <div className="row mt-5 bg-white form-signin">
+              <div className="row mt-5 bg-white p-5 shadow-lg rounded-4">
                 <div className="text-end mb-3">
                   <button type="button" className="btn btn-outline-danger me-3" onClick={delAllProducts} disabled={cartList.length === 0}>清空購物車</button>
                 </div>
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>項次</th>
-                      <th>商品</th>
-                      <th>數量</th>
-                      <th>小計</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cartList.length > 0
-                      ? (
-                        cartList.map((item, index) => (
-                          <tr key={item.id} className="align-middle">
-                            <td>{index + 1}</td>
-                            <td className="d-flex text-start">
-                              <img
-                                src={item.product.imageUrl}
-                                alt={item.id}
-                                className="cart-img rounded-2 border border-1 me-3"
-                              />
-                              <div className="d-flex flex-column justify-content-center">
-                                <p className="fw-bold mb-2">{item.product.title}</p>
-                                <p className="mb-2">
-                                  <del className="text-secondary">{item.product.origin_price}</del>
-                                  元 /
-                                  {item.product.price}
-                                  元
-                                </p>
-                                <p className="text-primary-300 mb-0">
-                                  省下
-                                  {item.product.origin_price * item.qty - item.product.price * item.qty}
-                                  元
-                                </p>
-                              </div>
-                            </td>
-                            <td>
-                              <div className="btn-group">
-                                <button
-                                  className="btn btn-outline-secondary"
-                                  disabled={loadingItem === item.id}
-                                  onClick={() => updateCartQty(item.id, item.product.id, item.qty - 1)}
-                                >
-                                  −
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>項次</th>
+                        <th className="w-25">商品</th>
+                        <th className="w-25">數量</th>
+                        <th>小計</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cartList.length > 0
+                        ? (
+                          cartList.map((item, index) => (
+                            <tr key={item.id} className="align-middle">
+                              <td>{index + 1}</td>
+                              <td className="text-start">
+                                <div className="d-flex flex-lg-row flex-column">
+                                  <img
+                                    src={item.product.imageUrl}
+                                    alt={item.id}
+                                    className="cart-img rounded-2 border border-1 me-3"
+                                  />
+                                  <div className="d-flex flex-column justify-content-center">
+                                    <p className="fw-bold mb-2">{item.product.title}</p>
+                                    <p className="mb-2">
+                                      <del className="text-secondary">{item.product.origin_price}</del>
+                                      元 /
+                                      {item.product.price}
+                                      元
+                                    </p>
+                                    <p className="text-primary-300 mb-0">
+                                      省下
+                                      {item.product.origin_price * item.qty - item.product.price * item.qty}
+                                      元
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="btn-group">
+                                  <button
+                                    className="btn btn-outline-secondary"
+                                    disabled={loadingItem === item.id}
+                                    onClick={() => updateCartQty(item.id, item.product.id, item.qty - 1)}
+                                  >
+                                    −
+                                  </button>
+                                  <span className="px-3 d-flex align-items-center">{item.qty}</span>
+                                  <button
+                                    className="btn btn-outline-secondary"
+                                    disabled={loadingItem === item.id}
+                                    onClick={() => updateCartQty(item.id, item.product.id, item.qty + 1)}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                              <td>{item.final_total}</td>
+                              <td>
+                                <button type="button" className="btn btn-link text-danger" onClick={() => delProduct(item.id)}>
+                                  <i className="bi bi-trash"></i>
                                 </button>
-                                <span className="px-3 d-flex align-items-center">{item.qty}</span>
-                                <button
-                                  className="btn btn-outline-secondary"
-                                  disabled={loadingItem === item.id}
-                                  onClick={() => updateCartQty(item.id, item.product.id, item.qty + 1)}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </td>
-                            <td>{item.final_total}</td>
-                            <td>
-                              <button type="button" className="btn btn-link text-danger" onClick={() => delProduct(item.id)}>
-                                <i className="bi bi-trash"></i>
-                              </button>
+                              </td>
+                            </tr>
+                          ))
+                        )
+                        : (
+                          <tr>
+                            <td colSpan="5" className="text-center">
+                              購物車沒有商品
                             </td>
                           </tr>
-                        ))
-                      )
-                      : (
-                        <tr>
-                          <td colSpan="5" className="text-center">
-                            購物車沒有商品
-                          </td>
-                        </tr>
-                      )}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="5" className="p-4">
-                        <div className="d-flex justify-content-end align-items-center">
-                          <span className="text-secondary me-4">
-                            共
-                            {totalQty}
-                            件商品
-                          </span>
-                          {totalSaved > 0 && (
+                        )}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan="5" className="p-4">
+                          <div className="d-flex flex-md-row flex-column justify-content-md-end align-items-center">
                             <span className="text-secondary me-4">
-                              一共省下
-                              <span className="text-danger fw-bold mx-1">
-                                {totalSaved.toLocaleString()}
-                              </span>
-                              元
+                              共
+                              {totalQty}
+                              件商品
                             </span>
-                          )}
-                          <span className="fs-1 me-5">
-                            NT$
-                            {totalAmount.toLocaleString()}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn btn-primary bg-gradient fs-3 py-2 px-5 rounded-pill"
-                            disabled={cartList.length === 0}
-                            onClick={handleCheckout}
-                          >
-                            進行結帳
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                            {totalSaved > 0 && (
+                              <span className="text-secondary me-4">
+                                一共省下
+                                <span className="text-danger fw-bold mx-1">
+                                  {totalSaved.toLocaleString()}
+                                </span>
+                                元
+                              </span>
+                            )}
+                            <span className="fs-1 me-5">
+                              NT$
+                              {totalAmount.toLocaleString()}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-primary bg-gradient fs-3 py-2 px-5 rounded-pill"
+                              disabled={cartList.length === 0}
+                              onClick={handleCheckout}
+                            >
+                              進行結帳
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             </>
           )

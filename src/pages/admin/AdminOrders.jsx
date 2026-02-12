@@ -129,21 +129,6 @@ function AdminOrders() {
     }
   }
 
-  // 登出
-  const checkLogout = async () => {
-    try {
-      const response = await axios.post(`${API_BASE}/logout`)
-      delete axios.defaults.headers.common['Authorization']
-
-      dispatch(createAsyncMessage(response.data))
-
-      setTimeout(() => navigate('/login'), 0)
-    }
-    catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
-    }
-  }
-
   // 編輯訂單資訊
   const updateOrder = async () => {
     const validateErrors = validateOrder(newOrder)
@@ -321,122 +306,112 @@ function AdminOrders() {
   return (
     <>
       <div className="container">
-        <div className="row mt-5 bg-white form-signin">
+        <div className="row mt-5 bg-white p-md-5 py-5 shadow-lg rounded-4">
           <div className="col">
-            <div className="text-end mb-3">
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={checkLogout}
-              >
-                登出
-              </button>
-            </div>
             <h2>訂單列表</h2>
             <div className="text-end mb-3">
               <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllOrder}>刪除所有訂單</button>
             </div>
-            <table className="table table-hover">
-              <thead>
-                <tr>
-                  <th className="w-25">訂單編號</th>
-                  <th className="w-25">會員資訊</th>
-                  <th className="w-25">購買商品清單</th>
-                  <th>金額</th>
-                  <th>付款狀態</th>
-                  <th>編輯</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map(order => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>
-                      <table className="table-sm">
-                        <tbody className="text-start">
-                          <tr>
-                            <th>姓名:</th>
-                            <td>{order.user?.name}</td>
-                          </tr>
-                          <tr>
-                            <th>email:</th>
-                            <td>{order.user?.email}</td>
-                          </tr>
-                          <tr>
-                            <th>電話:</th>
-                            <td>{order.user?.tel}</td>
-                          </tr>
-                          <tr>
-                            <th>地址:</th>
-                            <td>{order.user?.address}</td>
-                          </tr>
-                          <tr>
-                            <th>留言:</th>
-                            <td>{order.message ? order.message : '未留言'}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                    <td>
-                      <table className="table-sm">
-                        <tbody className="text-start">
-                          <tr>
-                            <th>
-                              {Object.values(order.products || {}).map(item => (
-                                <div key={item.id}>
-                                  {item.product.title}
-                                </div>
-                              ))}
-                            </th>
-                            <td>
-                              {Object.values(order.products || {}).map(item => (
-                                <div key={item.id}>
-                                  ×
-                                  {item.qty}
-                                </div>
-                              ))}
-                            </td>
-                            <td></td>
-                            <td>
-                              {Object.values(order.products || {}).map(item => (
-                                <div key={item.id}>
-                                  {item.total}
-                                </div>
-                              ))}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                    <td>{order.total}</td>
-                    <td className={order.is_paid ? 'text-success' : 'text-danger'}>
-                      {order.is_paid ? '已付款' : '未付款'}
-                    </td>
-                    <td>
-                      <div className="btn-group">
-                        <button
-                          type="button"
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => {
-                            setNewOrder(order) // 填入要編輯的資料
-                            setIsEditOpen(true) // 開啟編輯 modal
-                          }}
-                        >
-                          編輯
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => deleteOrder(order.id)}
-                        >
-                          刪除
-                        </button>
-                      </div>
-                    </td>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>訂單編號</th>
+                    <th>會員資訊</th>
+                    <th>購買商品清單</th>
+                    <th>金額</th>
+                    <th>付款狀態</th>
+                    <th>編輯</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {orders.map(order => (
+                    <tr key={order.id}>
+                      <td>{order.id}</td>
+                      <td>
+                        <table className="table-sm">
+                          <tbody className="text-start">
+                            <tr>
+                              <th>姓名:</th>
+                              <td>{order.user?.name}</td>
+                            </tr>
+                            <tr>
+                              <th>email:</th>
+                              <td>{order.user?.email}</td>
+                            </tr>
+                            <tr>
+                              <th>電話:</th>
+                              <td>{order.user?.tel}</td>
+                            </tr>
+                            <tr>
+                              <th>地址:</th>
+                              <td>{order.user?.address}</td>
+                            </tr>
+                            <tr>
+                              <th>留言:</th>
+                              <td>{order.message ? order.message : '未留言'}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                      <td>
+                        <table className="table-sm">
+                          <tbody className="text-start">
+                            <tr>
+                              <td>
+                                {Object.values(order.products || {}).map(item => (
+                                  <div key={item.id}>
+                                    <div className="d-flex flex-column mb-2">
+                                      <span>
+                                        <strong>
+                                          {item.product.title}
+                                        </strong>
+                                        {' '}
+                                        {item.qty}
+                                        {item.product.unit}
+                                      </span>
+                                      <span>
+                                        單價:
+                                        {item.total}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                      <td>{order.total}</td>
+                      <td className={order.is_paid ? 'text-success' : 'text-danger'}>
+                        {order.is_paid ? '已付款' : '未付款'}
+                      </td>
+                      <td>
+                        <div className="btn-group">
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              setNewOrder(order) // 填入要編輯的資料
+                              setIsEditOpen(true) // 開啟編輯 modal
+                            }}
+                          >
+                            編輯
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => deleteOrder(order.id)}
+                          >
+                            刪除
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination

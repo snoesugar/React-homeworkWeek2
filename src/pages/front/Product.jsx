@@ -37,7 +37,7 @@ const Product = () => {
     }
 
     fetchProduct()
-  }, [id])
+  }, [dispatch, id])
 
   const addToCart = async (qty = 1) => {
     if (addingId === product.id) return
@@ -86,11 +86,11 @@ const Product = () => {
       </div>
       <div className="row bg-white p-4 rounded shadow-sm">
         {/* 左側圖片區 */}
-        <div className="col-6">
+        <div className="col-md-6 mb-md-0 mb-4">
           <div className="mb-3">
             <img src={mainImage} alt={product.title} className="img-fluid rounded product-main border" />
           </div>
-          <div className="d-flex gap-2">
+          <div className="d-flex flex-wrap gap-2">
             {images.map((img, index) => (
               <button
                 key={index}
@@ -110,7 +110,7 @@ const Product = () => {
         </div>
 
         {/* 右側資訊區 */}
-        <div className="col-6 text-start">
+        <div className="col-md-6 text-start">
           <span className="badge rounded-pill bg-primary mb-2">
             {product.category}
           </span>

@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Modal, Collapse } from 'bootstrap'
 import { ProductList, TempProduct, AddProduct, EditProduct, Pagination, Spinner } from '../../components/Components'
 import { useDispatch } from 'react-redux'
@@ -35,7 +34,6 @@ function AdminProducts() {
   const productModalInstance = useRef(null)
   const addModalInstance = useRef(null)
   const editProductInstance = useRef(null)
-  const navigate = useNavigate()
   const dispatch = useDispatch()
 
   /* ---------- 查看細節 ---------- */
@@ -111,21 +109,6 @@ function AdminProducts() {
     }
     finally {
       setLoading(false) // 完成抓取
-    }
-  }
-
-  // 登出
-  const checkLogout = async () => {
-    try {
-      const response = await axios.post(`${API_BASE}/logout`)
-      delete axios.defaults.headers.common['Authorization']
-
-      dispatch(createAsyncMessage(response.data))
-
-      setTimeout(() => navigate('/login'), 0)
-    }
-    catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -467,37 +450,36 @@ function AdminProducts() {
           )
           : (
             <div className="container">
-              <div className="row mt-5 bg-white form-signin">
+              <div className="row mt-5 bg-white p-md-5 py-5 shadow-lg rounded-4">
                 <div className="col">
-                  <div className="text-end mb-3">
-                    <button type="button" className="btn btn-outline-primary" onClick={checkLogout}>登出</button>
-                  </div>
                   <h2>產品列表</h2>
-                  <div className="text-end mb-3">
+                  <div className="d-flex justify-content-md-end justify-content-center mb-3">
                     <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
-                    <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
+                    <button type="button" className="btn btn-outline-primary me-md-3" onClick={openAddModal}>建立新的產品</button>
                   </div>
-                  <table className="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>產品名稱</th>
-                        <th>原價</th>
-                        <th>售價</th>
-                        <th>是否啟用</th>
-                        <th>查看細節</th>
-                        <th>編輯</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <ProductList
-                        products={products}
-                        openModal={openModal}
-                        deleteProduct={deleteProduct}
-                        setNewProduct={setNewProduct}
-                        openEditModal={openEditModal}
-                      />
-                    </tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>產品名稱</th>
+                          <th>原價</th>
+                          <th>售價</th>
+                          <th>是否啟用</th>
+                          <th>查看細節</th>
+                          <th>編輯</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <ProductList
+                          products={products}
+                          openModal={openModal}
+                          deleteProduct={deleteProduct}
+                          setNewProduct={setNewProduct}
+                          openEditModal={openEditModal}
+                        />
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
                 <Pagination
                   pagination={pagination}

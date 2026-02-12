@@ -72,7 +72,7 @@ const ProductList = () => {
         ? (
           <div className="row gy-4 mb-4">
             {[...Array(9)].map((_, i) => (
-              <div className="col-4" key={i}>
+              <div className="col-lg-4 col-sm-6 col-12" key={i}>
                 <div className="card shadow-lg border-0 h-100 opacity-50">
                   <div className="bg-gray-300 preview-image-main"></div>
                   <div className="card-body d-flex justify-content-center align-items-center">
@@ -90,7 +90,7 @@ const ProductList = () => {
               {
                 products.map((product) => {
                   return (
-                    <div className="col-4" key={product.id}>
+                    <div className="col-lg-4 col-sm-6 col-12" key={product.id}>
                       <div className="card shadow-lg border-0 h-100">
                         <img src={product.imageUrl} className="card-img-top preview-image-main" alt={product.title} />
                         <div className="card-body bg-primary-100">

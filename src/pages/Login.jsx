@@ -71,7 +71,7 @@ const Login = () => {
       <div className="row justify-content-center">
         <h1 className="h3 mb-3 font-weight-normal text-primary">請先登入</h1>
         <div className="col-8">
-          <form id="form" className="form-signin" onSubmit={handleSubmit(handleSubmitToken)}>
+          <form id="form" className="mt-5 bg-white p-5 shadow-lg rounded-4" onSubmit={handleSubmit(handleSubmitToken)}>
             <div className="form-floating mb-3">
               <input
                 type="email"
