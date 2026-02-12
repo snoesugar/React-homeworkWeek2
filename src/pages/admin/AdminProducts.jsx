@@ -384,6 +384,7 @@ function AdminProducts() {
     }
 
     initAuth()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* ---------- product modal ---------- */
