@@ -477,7 +477,7 @@ function AdminProducts() {
                     <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllProduct}>刪除所有品項</button>
                     <button type="button" className="btn btn-outline-primary me-3" onClick={openAddModal}>建立新的產品</button>
                   </div>
-                  <table className="table">
+                  <table className="table table-hover">
                     <thead>
                       <tr>
                         <th>產品名稱</th>

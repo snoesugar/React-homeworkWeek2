@@ -160,7 +160,7 @@ const Cart = () => {
                 <div className="text-end mb-3">
                   <button type="button" className="btn btn-outline-danger me-3" onClick={delAllProducts} disabled={cartList.length === 0}>清空購物車</button>
                 </div>
-                <table className="table">
+                <table className="table table-hover">
                   <thead>
                     <tr>
                       <th>項次</th>

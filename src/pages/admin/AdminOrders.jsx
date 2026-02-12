@@ -288,6 +288,7 @@ function AdminOrders() {
     }
 
     initAuth()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* ---------- edit modal ---------- */
@@ -335,7 +336,7 @@ function AdminOrders() {
             <div className="text-end mb-3">
               <button type="button" className="btn btn-outline-danger me-3" onClick={deleteAllOrder}>刪除所有訂單</button>
             </div>
-            <table className="table">
+            <table className="table table-hover">
               <thead>
                 <tr>
                   <th className="w-25">訂單編號</th>
