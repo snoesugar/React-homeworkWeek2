@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
+import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify'
+import { createAsyncMessage } from '../../slice/messageSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -43,12 +44,18 @@ const CheckOut = () => {
   } = useForm({
     mode: 'onTouched',
   })
+  const dispatch = useDispatch()
 
   const onSubmit = async (formData) => {
     const cartRes = await axios.get(`${API_BASE}/api/${API_PATH}/cart`)
 
     if (!cartRes.data.data.carts.length) {
-      toast.error('購物車是空的，無法送出訂單')
+      dispatch(
+        createAsyncMessage({
+          success: false,
+          message: '購物車是空的，無法送出訂單',
+        }),
+      )
       return
     }
     try {
@@ -66,13 +73,18 @@ const CheckOut = () => {
       })
 
       // 3️⃣ 成功提示
-      toast.success('訂單已送出，購物車已清空')
+      dispatch(
+        createAsyncMessage({
+          success: true,
+          message: '訂單已送出，購物車已清空',
+        }),
+      )
 
       // 4️⃣ 導頁（依需求）
       navigate('/success')
     }
-    catch (err) {
-      toast.error(err.response?.data?.message || '送出訂單失敗')
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -183,7 +195,6 @@ const CheckOut = () => {
             </button>
           </div>
         </div>
-        <ToastContainer />
       </form>
     </div>
   )

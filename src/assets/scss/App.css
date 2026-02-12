@@ -70,13 +70,13 @@ img {
   object-fit: cover;
 }
 
-.product-main {
+.img-fluid.product-main {
   width: 500px;
   height: 350px;
   object-fit: cover;
 }
 
-.product-small {
+.img-thumbnail.product-small {
   width: 80px;
   height: 80px;
   object-fit: cover;

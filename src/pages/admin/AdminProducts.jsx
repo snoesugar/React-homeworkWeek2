@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify'
 import { Modal, Collapse } from 'bootstrap'
-import 'react-toastify/dist/ReactToastify.css'
 import { ProductList, TempProduct, AddProduct, EditProduct, Pagination, Spinner } from '../../components/Components'
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../../slice/messageSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -36,6 +36,7 @@ function AdminProducts() {
   const addModalInstance = useRef(null)
   const editProductInstance = useRef(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   /* ---------- 查看細節 ---------- */
   const openModal = item => setTempProduct(item)
@@ -105,11 +106,8 @@ function AdminProducts() {
       setProducts(res.data.products) // 只放當頁 10 筆
       setPagination(res.data.pagination) // 分頁資訊
     }
-    catch {
-      toast.error('取得訂單資料失敗，請稍後再試', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setLoading(false) // 完成抓取
@@ -119,24 +117,15 @@ function AdminProducts() {
   // 登出
   const checkLogout = async () => {
     try {
-      await axios.post(`${API_BASE}/logout`)
+      const response = await axios.post(`${API_BASE}/logout`)
       delete axios.defaults.headers.common['Authorization']
-      // 顯示 Toast
-      toast.success('登出成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        onClose: () => navigate('/login'), // toast 消失後再跳轉
-      })
+
+      dispatch(createAsyncMessage(response.data))
+
+      setTimeout(() => navigate('/login'), 0)
     }
-    catch {
-      toast.error('登出失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -154,7 +143,7 @@ function AdminProducts() {
     // 通過驗證才送 API
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE}/api/${API_PATH}/admin/product`,
         {
           data: {
@@ -166,7 +155,7 @@ function AdminProducts() {
         },
       )
 
-      toast.success('新增產品成功', { autoClose: 1500 })
+      dispatch(createAsyncMessage(response.data))
 
       closeAddModal() // 關 Modal
       getProducts() // 重新抓資料
@@ -186,13 +175,7 @@ function AdminProducts() {
       })
     }
     catch (error) {
-      const message
-        = error?.response?.data?.message || '新增產品失敗，請確認輸入內容'
-
-      toast.error(message, {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -203,16 +186,19 @@ function AdminProducts() {
     try {
       setLoading(true)
       // 1️⃣ 先取得目前所有產品
-      const res = await axios.get(
+      const response = await axios.get(
         `${API_BASE}/api/${API_PATH}/admin/products?page=1&per_page=1000`,
       )
 
-      const products = res.data.products
+      const products = response.data.products
 
       if (products.length === 0) {
-        toast.info('目前沒有產品可刪除', {
-          autoClose: 1500,
-        })
+        dispatch(
+          createAsyncMessage({
+            success: false,
+            message: '目前沒有產品可刪除',
+          }),
+        )
         return
       }
 
@@ -226,23 +212,13 @@ function AdminProducts() {
       // 3️⃣ 同時刪除所有產品（真的刪資料庫）
       await Promise.all(deleteRequests)
 
+      dispatch(createAsyncMessage(response.data))
+
       // 4️⃣ 重新取得產品（畫面同步）
       getProducts()
-
-      toast.success('刪除所有品項成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
     }
-    catch {
-      toast.error('刪除所有品項失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setLoading(false)
@@ -254,27 +230,16 @@ function AdminProducts() {
     if (!window.confirm('確定要刪除這個品項嗎？')) return
 
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/admin/product/${id}`,
       )
-
-      toast.success('刪除品項成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       // 重新取得產品（畫面同步）
       getProducts()
     }
-    catch {
-      toast.error('刪除品項失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -292,7 +257,7 @@ function AdminProducts() {
     // 通過驗證才送 API
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `${API_BASE}/api/${API_PATH}/admin/product/${newProduct.id}`,
         {
           data: {
@@ -302,15 +267,7 @@ function AdminProducts() {
           },
         },
       )
-
-      toast.success('編輯品項成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       // 關閉編輯 modal
       closeEditModal()
@@ -333,13 +290,7 @@ function AdminProducts() {
       })
     }
     catch (error) {
-      const message
-        = error?.response?.data?.message || '編輯品項失敗'
-
-      toast.error(message, {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -506,7 +457,6 @@ function AdminProducts() {
 
   return (
     <>
-      <ToastContainer />
       {
         loading
           ? (

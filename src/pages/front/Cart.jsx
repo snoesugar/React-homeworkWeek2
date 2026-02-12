@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
 import axios from 'axios'
 import { useNavigate } from 'react-router'
 import { Spinner } from '../../components/Components.jsx'
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../../slice/messageSlice.jsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -12,6 +13,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true)
   const [loadingItem, setLoadingItem] = useState(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   // 取得購物車
   const getCart = async (showLoading = false) => {
@@ -22,11 +24,8 @@ const Cart = () => {
       )
       setCartList(res.data.data.carts)
     }
-    catch {
-      toast.error('取得購物車失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       if (showLoading) setLoading(false) // 完成抓取
@@ -40,7 +39,7 @@ const Cart = () => {
     try {
       setLoadingItem(cartId)
 
-      await axios.put(
+      const response = await axios.put(
         `${API_BASE}/api/${API_PATH}/cart/${cartId}`,
         {
           data: {
@@ -49,14 +48,12 @@ const Cart = () => {
           },
         },
       )
+      dispatch(createAsyncMessage(response.data))
 
       await getCart()
     }
-    catch {
-      toast.error('更新數量失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setLoadingItem(null)
@@ -66,61 +63,43 @@ const Cart = () => {
   // 刪除購物車所有商品
   const delAllProducts = async () => {
     if (cartList.length === 0) {
-      toast.info('購物車沒有商品', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+      dispatch(
+        createAsyncMessage({
+          success: false,
+          message: '購物車沒有商品',
+        }),
+      )
       return
     }
 
     try {
       if (!window.confirm('確定要刪除所有品項嗎？')) return
-      await axios.delete(
+      const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/carts`,
       )
       getCart() // 重新抓空的購物車
 
-      toast.success('購物車已清空', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
     }
-    catch {
-      toast.error('刪除購物車所有商品失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
   // 刪除購物車單個商品
   const delProduct = async (id) => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/cart/${id}`,
       )
 
-      toast.success('刪除品項成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       // 重新取得產品（畫面同步）
       getCart()
     }
-    catch {
-      toast.error('刪除品項失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -142,20 +121,20 @@ const Cart = () => {
   // 進行結帳
   const handleCheckout = () => {
     if (cartList.length === 0) {
-      toast.info('購物車沒有商品', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+      dispatch(
+        createAsyncMessage({
+          success: false,
+          message: '購物車沒有商品',
+        }),
+      )
       return
     }
-    toast.success('前往結帳流程', {
-      position: 'top-right',
-      autoClose: 1500, // 1.5 秒自動消失
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    })
+    dispatch(
+      createAsyncMessage({
+        success: true,
+        message: '前往結帳流程',
+      }),
+    )
     const timer = setTimeout(() => {
       navigate('/checkout')
     }, 2000)
@@ -290,7 +269,6 @@ const Cart = () => {
                   </tfoot>
                 </table>
               </div>
-              <ToastContainer />
             </>
           )
       }

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import { ToastContainer, toast } from 'react-toastify'
 import { Pagination, Spinner } from '../../components/Components'
 import { Link } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../../slice/messageSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -14,6 +15,7 @@ const ProductList = () => {
   const [pagination, setPagination] = useState({})
   const [loading, setLoading] = useState(true)
   const [addingId, setAddingId] = useState(null)
+  const dispatch = useDispatch()
 
   // 抓取產品資料
   const getProducts = useCallback(async (page = 1) => {
@@ -26,11 +28,8 @@ const ProductList = () => {
       setProducts(res.data.products)
       setPagination(res.data.pagination)
     }
-    catch {
-      toast.error('取得產品資料失敗，請稍後再試', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setLoading(false) // 完成抓取
@@ -42,7 +41,7 @@ const ProductList = () => {
     try {
       setAddingId(product.id)
 
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE}/api/${API_PATH}/cart`,
         {
           data: {
@@ -51,19 +50,11 @@ const ProductList = () => {
           },
         },
       )
-
-      // 直接使用 product.title
-      toast.success(`${product.title} 已加入購物車`, {
-        position: 'top-right',
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      // ✅ 直接 dispatch API 訊息
+      dispatch(createAsyncMessage(response.data))
     }
     catch (error) {
-      toast.error(error.response?.data?.message || '加入購物車失敗')
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setAddingId(null) // 一定要還原
@@ -135,7 +126,6 @@ const ProductList = () => {
             />
           </>
         )}
-      <ToastContainer />
     </div>
   )
 }

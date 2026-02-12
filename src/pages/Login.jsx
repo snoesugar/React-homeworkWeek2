@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import 'react-toastify/dist/ReactToastify.css'
-import { ToastContainer, toast } from 'react-toastify'
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../slice/messageSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -15,6 +15,7 @@ const Login = () => {
   } = useForm({
     mode: 'onTouched',
   })
+  const dispatch = useDispatch()
 
   // 確認登入是否成功 checkLogin
   const authorization = async () => {
@@ -32,18 +33,15 @@ const Login = () => {
       axios.defaults.headers.common['Authorization'] = token
       await axios.post(`${API_BASE}/api/user/check`)
     }
-    catch {
-      toast.error('驗證失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
   // 登入送出：取得 token
   const handleSubmitToken = async (data) => {
     try {
-      const res = await axios.post(
+      const response = await axios.post(
         `${API_BASE}/admin/signin`,
         {
           username: data.username,
@@ -51,32 +49,21 @@ const Login = () => {
         },
       )
 
-      const { token, expired } = res.data
+      const { token, expired } = response.data
 
       // 存 token 到 cookie
 
       // eslint-disable-next-line react-hooks/immutability
       document.cookie = `hexToken=${token}; expires=${new Date(expired)}`
 
-      // 顯示 Toast
-      toast.success('登入成功，正在跳轉頁面...', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       await authorization()
       // 跳轉到後台產品頁
       navigate('/admin/product')
     }
-    catch {
-      toast.error('登入失敗，請確認帳密', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
   return (
@@ -135,7 +122,6 @@ const Login = () => {
         </div>
       </div>
       <p className="mt-5 mb-3 text-muted">&copy; 2024~∞ - 六角學院</p>
-      <ToastContainer />
     </div>
   )
 }

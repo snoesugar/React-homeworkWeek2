@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../../slice/messageSlice'
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
@@ -15,6 +14,7 @@ const Product = () => {
   const [images, setImages] = useState([])
   const [addingId, setAddingId] = useState(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -28,9 +28,8 @@ const Product = () => {
         setImages(productData.imagesUrl?.length ? productData.imagesUrl : [productData.imageUrl])
         setMainImage(productData.imageUrl)
       }
-      catch (err) {
-        console.error(err)
-        toast.error('取得產品資料失敗')
+      catch (error) {
+        dispatch(createAsyncMessage(error.response.data))
       }
       finally {
         setLoading(false)
@@ -44,16 +43,16 @@ const Product = () => {
     if (addingId === product.id) return
     try {
       setAddingId(product.id)
-      await axios.post(`${API_BASE}/api/${API_PATH}/cart`, {
+      const response = await axios.post(`${API_BASE}/api/${API_PATH}/cart`, {
         data: {
           product_id: product.id,
           qty,
         },
       })
-      toast.success(`${product.title} 已加入購物車`)
+      dispatch(createAsyncMessage(response.data))
     }
-    catch (err) {
-      toast.error(err.response?.data?.message || '加入購物車失敗')
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setAddingId(null) // 一定要還原
@@ -144,7 +143,6 @@ const Product = () => {
           </button>
         </div>
       </div>
-      <ToastContainer position="top-right" autoClose={1500} />
     </div>
   )
 }

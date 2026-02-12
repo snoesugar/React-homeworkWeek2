@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 import { Modal } from 'bootstrap'
 import { Spinner, Pagination, EditOrder } from '../../components/Components'
+import { useDispatch } from 'react-redux'
+import { createAsyncMessage } from '../../slice/messageSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -36,6 +36,7 @@ function AdminOrders() {
   const editOrderRef = useRef(null)
   const editOrderInstance = useRef(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   /* ---------- 編輯 Modal ---------- */
   const closeEditModal = () => {
@@ -46,6 +47,7 @@ function AdminOrders() {
 
   // 獲得訂單資料
   const getOrders = async (page = 1) => {
+    setLoading(true)
     try {
       const res = await axios.get(
         `${API_BASE}/api/${API_PATH}/admin/orders?page=${page}`,
@@ -55,11 +57,11 @@ function AdminOrders() {
       setPagination(res.data.pagination)
       console.log(res.data.orders)
     }
-    catch {
-      toast.error('取得訂單資料失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
+    }
+    finally {
+      setLoading(false) // 完成抓取
     }
   }
 
@@ -68,27 +70,16 @@ function AdminOrders() {
     if (!window.confirm('確定要刪除這個訂單嗎？')) return
 
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/admin/order/${id}`,
       )
-
-      toast.success('刪除訂單成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       // 重新取得產品（畫面同步）
       getOrders()
     }
-    catch {
-      toast.error('刪除訂單失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -99,46 +90,39 @@ function AdminOrders() {
     try {
       setLoading(true)
       // 1️⃣ 先取得目前所有產品
-      const res = await axios.get(
+      const response = await axios.get(
         `${API_BASE}/api/${API_PATH}/admin/orders?all`,
       )
 
-      const products = res.data.products
+      const orders = response.data.orders
 
-      if (products.length === 0) {
-        toast.info('目前沒有訂單可刪除', {
-          autoClose: 1500,
-        })
+      if (orders.length === 0) {
+        dispatch(
+          createAsyncMessage({
+            success: false,
+            message: '目前沒有訂單可刪除',
+          }),
+        )
         return
       }
 
       // 2️⃣ 組成刪除請求陣列
-      const deleteRequests = products.map(item =>
+      const deleteRequests = orders.map(item =>
         axios.delete(
-          `${API_BASE}/api/${API_PATH}/admin/product/${item.id}`,
+          `${API_BASE}/api/${API_PATH}/admin/order/${item.id}`,
         ),
       )
 
       // 3️⃣ 同時刪除所有產品（真的刪資料庫）
       await Promise.all(deleteRequests)
 
+      dispatch(createAsyncMessage(response.data))
+
       // 4️⃣ 重新取得產品（畫面同步）
       getOrders()
-
-      toast.success('刪除所有訂單成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
     }
-    catch {
-      toast.error('刪除所有訂單失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
     finally {
       setLoading(false)
@@ -148,23 +132,15 @@ function AdminOrders() {
   // 登出
   const checkLogout = async () => {
     try {
-      await axios.post(`${API_BASE}/logout`)
+      const response = await axios.post(`${API_BASE}/logout`)
       delete axios.defaults.headers.common['Authorization']
-      toast.success('登出成功', {
-        position: 'top-right',
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        onClose: () => navigate('/login'), // toast 消失後再跳轉
-      })
+
+      dispatch(createAsyncMessage(response.data))
+
+      setTimeout(() => navigate('/login'), 0)
     }
-    catch {
-      toast.error('登出失敗', {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+    catch (error) {
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -182,19 +158,11 @@ function AdminOrders() {
     // 通過驗證才送 API
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `${API_BASE}/api/${API_PATH}/admin/order/${newOrder.id}`,
         { data: newOrder },
       )
-
-      toast.success('編輯訂單成功', {
-        position: 'top-right',
-        autoClose: 1500, // 1.5 秒自動消失
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
+      dispatch(createAsyncMessage(response.data))
 
       // 關閉編輯 modal
       closeEditModal()
@@ -217,13 +185,7 @@ function AdminOrders() {
       })
     }
     catch (error) {
-      const message
-        = error?.response?.data?.message || '編輯訂單失敗'
-
-      toast.error(message, {
-        position: 'top-right',
-        autoClose: 1500,
-      })
+      dispatch(createAsyncMessage(error.response.data))
     }
   }
 
@@ -326,7 +288,7 @@ function AdminOrders() {
     }
 
     initAuth()
-  }, [navigate])
+  }, [])
 
   /* ---------- edit modal ---------- */
   useEffect(() => {
@@ -357,7 +319,6 @@ function AdminOrders() {
 
   return (
     <>
-      <ToastContainer />
       <div className="container">
         <div className="row mt-5 bg-white form-signin">
           <div className="col">

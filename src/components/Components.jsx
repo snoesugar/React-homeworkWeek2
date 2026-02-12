@@ -5,6 +5,7 @@ import ProductList from './ProductList'
 import TempProduct from './TempProduct'
 import Spinner from './Spinner'
 import EditOrder from './EditOrder'
+import MessageToast from './MessageToast'
 
 export {
   AddProduct,
@@ -14,4 +15,5 @@ export {
   TempProduct,
   Spinner,
   EditOrder,
+  MessageToast,
 }
