@@ -2,8 +2,7 @@ import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { Modal, Collapse } from 'bootstrap'
 import { ProductList, TempProduct, AddProduct, EditProduct, Pagination, Spinner } from '../../components/Components'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../../slice/messageSlice'
+import useMessage from '../../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -34,7 +33,7 @@ function AdminProducts() {
   const productModalInstance = useRef(null)
   const addModalInstance = useRef(null)
   const editProductInstance = useRef(null)
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   /* ---------- 查看細節 ---------- */
   const openModal = item => setTempProduct(item)
@@ -105,7 +104,7 @@ function AdminProducts() {
       setPagination(res.data.pagination) // 分頁資訊
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoading(false) // 完成抓取
@@ -138,7 +137,7 @@ function AdminProducts() {
         },
       )
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       closeAddModal() // 關 Modal
       getProducts() // 重新抓資料
@@ -158,7 +157,7 @@ function AdminProducts() {
       })
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -176,12 +175,7 @@ function AdminProducts() {
       const products = response.data.products
 
       if (products.length === 0) {
-        dispatch(
-          createAsyncMessage({
-            success: false,
-            message: '目前沒有產品可刪除',
-          }),
-        )
+        showSuccess('目前沒有產品可刪除')
         return
       }
 
@@ -195,13 +189,13 @@ function AdminProducts() {
       // 3️⃣ 同時刪除所有產品（真的刪資料庫）
       await Promise.all(deleteRequests)
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 4️⃣ 重新取得產品（畫面同步）
       getProducts()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoading(false)
@@ -216,13 +210,13 @@ function AdminProducts() {
       const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/admin/product/${id}`,
       )
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 重新取得產品（畫面同步）
       getProducts()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -250,7 +244,7 @@ function AdminProducts() {
           },
         },
       )
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 關閉編輯 modal
       closeEditModal()
@@ -273,7 +267,7 @@ function AdminProducts() {
       })
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -330,7 +324,7 @@ function AdminProducts() {
       }))
     }
     catch (error) {
-      console.error('Upload error:', error)
+      showError(error.response.data.message)
     }
   }
   // 確認登入，重整還會在後台

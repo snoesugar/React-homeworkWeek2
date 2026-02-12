@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { Pagination, Spinner } from '../../components/Components'
 import { Link } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../../slice/messageSlice'
+import useMessage from '../../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -15,7 +14,7 @@ const ProductList = () => {
   const [pagination, setPagination] = useState({})
   const [loading, setLoading] = useState(true)
   const [addingId, setAddingId] = useState(null)
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   // 抓取產品資料
   const getProducts = useCallback(async (page = 1) => {
@@ -29,7 +28,7 @@ const ProductList = () => {
       setPagination(res.data.pagination)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoading(false) // 完成抓取
@@ -52,10 +51,10 @@ const ProductList = () => {
         },
       )
       // ✅ 直接 dispatch API 訊息
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setAddingId(null) // 一定要還原

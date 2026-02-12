@@ -1,8 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../slice/messageSlice'
+import useMessage from '../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -15,7 +14,7 @@ const Login = () => {
   } = useForm({
     mode: 'onTouched',
   })
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   // 確認登入是否成功 checkLogin
   const authorization = async () => {
@@ -34,7 +33,7 @@ const Login = () => {
       await axios.post(`${API_BASE}/api/user/check`)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -56,14 +55,14 @@ const Login = () => {
       // eslint-disable-next-line react-hooks/immutability
       document.cookie = `hexToken=${token}; expires=${new Date(expired)}`
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       await authorization()
       // 跳轉到後台產品頁
       navigate('/admin/product')
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
   return (

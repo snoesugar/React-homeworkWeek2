@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router'
 import { Spinner } from '../../components/Components.jsx'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../../slice/messageSlice.jsx'
+import useMessage from '../../hooks/useMessage.jsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -13,7 +12,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true)
   const [loadingItem, setLoadingItem] = useState(null)
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   // 取得購物車
   const getCart = async (showLoading = false) => {
@@ -25,7 +24,7 @@ const Cart = () => {
       setCartList(res.data.data.carts)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       if (showLoading) setLoading(false) // 完成抓取
@@ -48,12 +47,12 @@ const Cart = () => {
           },
         },
       )
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       await getCart()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoadingItem(null)
@@ -63,12 +62,7 @@ const Cart = () => {
   // 刪除購物車所有商品
   const delAllProducts = async () => {
     if (cartList.length === 0) {
-      dispatch(
-        createAsyncMessage({
-          success: false,
-          message: '購物車沒有商品',
-        }),
-      )
+      showSuccess('購物車沒有商品')
       return
     }
 
@@ -79,10 +73,10 @@ const Cart = () => {
       )
       getCart() // 重新抓空的購物車
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -93,13 +87,13 @@ const Cart = () => {
         `${API_BASE}/api/${API_PATH}/cart/${id}`,
       )
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 重新取得產品（畫面同步）
       getCart()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -121,20 +115,10 @@ const Cart = () => {
   // 進行結帳
   const handleCheckout = () => {
     if (cartList.length === 0) {
-      dispatch(
-        createAsyncMessage({
-          success: false,
-          message: '購物車沒有商品',
-        }),
-      )
+      showError('購物車沒有商品')
       return
     }
-    dispatch(
-      createAsyncMessage({
-        success: true,
-        message: '前往結帳流程',
-      }),
-    )
+    showSuccess('前往結帳流程')
     const timer = setTimeout(() => {
       navigate('/checkout')
     }, 2000)

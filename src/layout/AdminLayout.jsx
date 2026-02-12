@@ -1,15 +1,14 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../slice/messageSlice'
 import axios from 'axios'
+import useMessage from '../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
 const AdminLayout = () => {
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   const toggleNavbar = () => {
     setIsOpen(prev => !prev)
@@ -24,13 +23,11 @@ const AdminLayout = () => {
     try {
       const response = await axios.post(`${API_BASE}/logout`)
       delete axios.defaults.headers.common['Authorization']
-
-      dispatch(createAsyncMessage(response.data))
-
-      setTimeout(() => navigate('/login'), 0)
+      showSuccess(response.data.message)
+      navigate('/login')
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 

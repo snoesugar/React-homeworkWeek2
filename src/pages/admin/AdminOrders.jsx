@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Modal } from 'bootstrap'
 import { Spinner, Pagination, EditOrder } from '../../components/Components'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../../slice/messageSlice'
+import useMessage from '../../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -36,7 +35,7 @@ function AdminOrders() {
   const editOrderRef = useRef(null)
   const editOrderInstance = useRef(null)
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   /* ---------- 編輯 Modal ---------- */
   const closeEditModal = () => {
@@ -58,7 +57,7 @@ function AdminOrders() {
       console.log(res.data.orders)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoading(false) // 完成抓取
@@ -73,13 +72,13 @@ function AdminOrders() {
       const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/admin/order/${id}`,
       )
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 重新取得產品（畫面同步）
       getOrders()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
@@ -97,12 +96,7 @@ function AdminOrders() {
       const orders = response.data.orders
 
       if (orders.length === 0) {
-        dispatch(
-          createAsyncMessage({
-            success: false,
-            message: '目前沒有訂單可刪除',
-          }),
-        )
+        showSuccess('目前沒有訂單可刪除')
         return
       }
 
@@ -116,13 +110,13 @@ function AdminOrders() {
       // 3️⃣ 同時刪除所有產品（真的刪資料庫）
       await Promise.all(deleteRequests)
 
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 4️⃣ 重新取得產品（畫面同步）
       getOrders()
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setLoading(false)
@@ -147,7 +141,7 @@ function AdminOrders() {
         `${API_BASE}/api/${API_PATH}/admin/order/${newOrder.id}`,
         { data: newOrder },
       )
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
 
       // 關閉編輯 modal
       closeEditModal()
@@ -170,7 +164,7 @@ function AdminOrders() {
       })
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
-import { useDispatch } from 'react-redux'
-import { createAsyncMessage } from '../../slice/messageSlice'
+import useMessage from '../../hooks/useMessage'
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
@@ -14,7 +13,7 @@ const Product = () => {
   const [images, setImages] = useState([])
   const [addingId, setAddingId] = useState(null)
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -29,7 +28,7 @@ const Product = () => {
         setMainImage(productData.imageUrl)
       }
       catch (error) {
-        dispatch(createAsyncMessage(error.response.data))
+        showError(error.response.data.message)
       }
       finally {
         setLoading(false)
@@ -37,7 +36,8 @@ const Product = () => {
     }
 
     fetchProduct()
-  }, [dispatch, id])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   const addToCart = async (qty = 1) => {
     if (addingId === product.id) return
@@ -49,10 +49,10 @@ const Product = () => {
           qty,
         },
       })
-      dispatch(createAsyncMessage(response.data))
+      showSuccess(response.data.message)
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
     finally {
       setAddingId(null) // 一定要還原

@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
-import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { createAsyncMessage } from '../../slice/messageSlice'
+import useMessage from '../../hooks/useMessage'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
@@ -44,18 +43,13 @@ const CheckOut = () => {
   } = useForm({
     mode: 'onTouched',
   })
-  const dispatch = useDispatch()
+  const { showSuccess, showError } = useMessage()
 
   const onSubmit = async (formData) => {
     const cartRes = await axios.get(`${API_BASE}/api/${API_PATH}/cart`)
 
     if (!cartRes.data.data.carts.length) {
-      dispatch(
-        createAsyncMessage({
-          success: false,
-          message: '購物車是空的，無法送出訂單',
-        }),
-      )
+      showError('購物車是空的，無法送出訂單')
       return
     }
     try {
@@ -73,18 +67,13 @@ const CheckOut = () => {
       })
 
       // 3️⃣ 成功提示
-      dispatch(
-        createAsyncMessage({
-          success: true,
-          message: '訂單已送出，購物車已清空',
-        }),
-      )
+      showSuccess('訂單已送出，購物車已清空')
 
       // 4️⃣ 導頁（依需求）
       navigate('/success')
     }
     catch (error) {
-      dispatch(createAsyncMessage(error.response.data))
+      showError(error.response.data.message)
     }
   }
 
