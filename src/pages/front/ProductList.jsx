@@ -3,6 +3,8 @@ import axios from 'axios'
 import { Pagination, Spinner } from '../../components/Components'
 import { Link } from 'react-router-dom'
 import useMessage from '../../hooks/useMessage'
+import { useDispatch } from 'react-redux'
+import { getCartAsync } from '../../slice/cartSlice'
 
 const API_BASE = import.meta.env.VITE_API_BASE
 
@@ -15,6 +17,7 @@ const ProductList = () => {
   const [loading, setLoading] = useState(true)
   const [addingId, setAddingId] = useState(null)
   const { showSuccess, showError } = useMessage()
+  const dispatch = useDispatch()
 
   // 抓取產品資料
   const getProducts = useCallback(async (page = 1) => {
@@ -52,6 +55,7 @@ const ProductList = () => {
       )
       // ✅ 直接 dispatch API 訊息
       showSuccess(response.data.message)
+      dispatch(getCartAsync())
     }
     catch (error) {
       showError(error.response.data.message)
@@ -63,7 +67,8 @@ const ProductList = () => {
 
   useEffect(() => {
     getProducts()
-  }, [getProducts])
+    dispatch(getCartAsync())
+  }, [dispatch, getProducts])
 
   return (
     <div className="container mt-4">

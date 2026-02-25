@@ -4,32 +4,20 @@ import { useNavigate } from 'react-router'
 import { Spinner } from '../../components/Components.jsx'
 import useMessage from '../../hooks/useMessage.jsx'
 
+import { useSelector, useDispatch } from 'react-redux'
+import { getCartAsync } from '../../slice/cartSlice.jsx'
+
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
 const Cart = () => {
-  const [cartList, setCartList] = useState([])
-  const [loading, setLoading] = useState(true)
   const [loadingItem, setLoadingItem] = useState(null)
   const navigate = useNavigate()
   const { showSuccess, showError } = useMessage()
-
-  // 取得購物車
-  const getCart = async (showLoading = false) => {
-    if (showLoading) setLoading(true) // 開始抓資料
-    try {
-      const res = await axios.get(
-        `${API_BASE}/api/${API_PATH}/cart`,
-      )
-      setCartList(res.data.data.carts)
-    }
-    catch (error) {
-      showError(error.response.data.message)
-    }
-    finally {
-      if (showLoading) setLoading(false) // 完成抓取
-    }
-  }
+  const dispatch = useDispatch()
+  const { carts: cartList, loading } = useSelector(
+    state => state.cart,
+  )
 
   // 修改商品數量
   const updateCartQty = async (cartId, productId, qty) => {
@@ -49,7 +37,7 @@ const Cart = () => {
       )
       showSuccess(response.data.message)
 
-      await getCart()
+      dispatch(getCartAsync())
     }
     catch (error) {
       showError(error.response.data.message)
@@ -71,7 +59,7 @@ const Cart = () => {
       const response = await axios.delete(
         `${API_BASE}/api/${API_PATH}/carts`,
       )
-      getCart() // 重新抓空的購物車
+      dispatch(getCartAsync()) // 重新抓空的購物車
 
       showSuccess(response.data.message)
     }
@@ -90,7 +78,7 @@ const Cart = () => {
       showSuccess(response.data.message)
 
       // 重新取得產品（畫面同步）
-      getCart()
+      dispatch(getCartAsync())
     }
     catch (error) {
       showError(error.response.data.message)
@@ -119,16 +107,15 @@ const Cart = () => {
       return
     }
     showSuccess('前往結帳流程')
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       navigate('/checkout')
     }, 2000)
-    return () => clearTimeout(timer)
+    return () => clearTimeout()
   }
 
   useEffect(() => {
-    getCart(true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    dispatch(getCartAsync())
+  }, [dispatch])
 
   return (
     <div className="container">

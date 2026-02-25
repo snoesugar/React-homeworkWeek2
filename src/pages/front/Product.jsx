@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import useMessage from '../../hooks/useMessage'
+import { useDispatch } from 'react-redux'
+import { getCartAsync } from '../../slice/cartSlice'
 const API_BASE = import.meta.env.VITE_API_BASE
 const API_PATH = import.meta.env.VITE_API_PATH
 
@@ -14,6 +16,7 @@ const Product = () => {
   const [addingId, setAddingId] = useState(null)
   const navigate = useNavigate()
   const { showSuccess, showError } = useMessage()
+  const dispatch = useDispatch()
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -50,6 +53,7 @@ const Product = () => {
         },
       })
       showSuccess(response.data.message)
+      dispatch(getCartAsync())
     }
     catch (error) {
       showError(error.response.data.message)
