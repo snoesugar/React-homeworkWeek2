@@ -18,6 +18,7 @@ const Cart = () => {
   const { carts: cartList, loading } = useSelector(
     state => state.cart,
   )
+  const isInitialLoading = loading && cartList.length === 0
 
   // 修改商品數量
   const updateCartQty = async (cartId, productId, qty) => {
@@ -120,7 +121,7 @@ const Cart = () => {
   return (
     <div className="container">
       {
-        loading
+        isInitialLoading
           ? (
             <div className="d-flex justify-content-center align-items-center text-center mt-5">
               <Spinner />
