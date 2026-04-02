@@ -8,9 +8,11 @@
 
 ## 🎯 開發動機與核心價值
 
-練習用的電傷平台，有包括前後台，沒有特別設計界面(´-ι_-｀)
-因為把這個基本功能都拿去專心做桌遊電商平台
-請往這裡走σ`∀´)σ **[Boardreams - 沉浸式桌遊電商平台](https://github.com/snoesugar/Boardreams-React)**
+練習用的電商平台，包含前後台功能。  
+介面部分沒有特別美化 (´-ι_-｀)  
+
+因為我把專注力都投入到另一款桌遊電商平台開發了！  
+請往這裡走 σ`∀´)σ **[Boardreams - 沉浸式桌遊電商平台](https://github.com/snoesugar/Boardreams-React)**
 
 ---
 
